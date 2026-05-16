@@ -41,7 +41,11 @@ void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size)
 
 void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer)
 {
-	if (pBuffer == NULL || Address >= 0x2000)
+	/* [hyggx fix] Original check only tested Address >= 0x2000, which allows
+	 * Address = 0x1FF8..0x1FFF to pass while the subsequent fixed 8-byte write
+	 * would access 0x2000..0x2007 — past the end of the EEPROM.
+	 * Correct upper bound: Address must leave room for 8 bytes. */
+	if (pBuffer == NULL || Address > (0x2000u - 8u))
 		return;
 
 

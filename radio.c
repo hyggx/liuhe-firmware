@@ -349,7 +349,10 @@ void RADIO_ConfigureChannel(const unsigned int VFO, const unsigned int configure
 
 	pVfo->freq_config_RX.Frequency = frequency;
 
-	if (frequency >= frequencyBandTable[BAND2_108MHz].upper && frequency < frequencyBandTable[BAND2_108MHz].upper)
+	if (frequency >= frequencyBandTable[BAND2_108MHz].lower && frequency < frequencyBandTable[BAND2_108MHz].upper)
+		/* [hyggx fix] Dead condition: original code compared >= .upper && < .upper which
+		 * is always false.  Intent is to disable TX offset for the aviation AM band
+		 * (108–137 MHz), so the correct check is >= .lower && < .upper. */
 		pVfo->TX_OFFSET_FREQUENCY_DIRECTION = TX_OFFSET_FREQUENCY_DIRECTION_OFF;
 	else if (!IS_MR_CHANNEL(channel))
 		pVfo->TX_OFFSET_FREQUENCY = FREQUENCY_RoundToStep(pVfo->TX_OFFSET_FREQUENCY, pVfo->StepFrequency);

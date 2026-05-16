@@ -243,6 +243,9 @@ void BK4819_WriteU16(uint16_t Data)
 void BK4819_SetAGC(bool enable)
 {
 	uint16_t regVal = BK4819_ReadRegister(BK4819_REG_7E);
+	/* The parentheses around (regVal & (1 << 15)) ensure ! binds to the full
+	 * bitfield expression before ==, so the logic is correct as written:
+	 *   bit15=0 → AGC auto (enabled), bit15=1 → AGC fixed (disabled). */
 	if(!(regVal & (1 << 15)) == enable)
 		return;
 

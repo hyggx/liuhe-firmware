@@ -198,6 +198,9 @@ static void SendVersion(void)
 
 	Reply.Header.ID = 0x0515;
 	Reply.Header.Size = sizeof(Reply.Data);
+	/* Version[16] must hold AUTHOR_STRING + " " + VERSION_STRING (+ null).
+	 * Current build: "EGZUMER 7607f0a" = 15 chars + null = 16 bytes — exact fit.
+	 * If AUTHOR_STRING is ever lengthened, replace this with strncpy. */
 	strcpy(Reply.Data.Version, Version);
 	Reply.Data.bHasCustomAesKey = bHasCustomAesKey;
 	Reply.Data.bIsInLockScreen = bIsInLockScreen;
@@ -258,6 +261,13 @@ static void CMD_051B(const uint8_t *pBuffer)
 	if (pCmd->Timestamp != Timestamp)
 		return;
 
+	/* [hyggx fix] Guard against EEPROM read commands that request more than
+	 * 128 bytes: pCmd->Size is uint8_t (0..255) but Reply.Data.Data[] is only
+	 * 128 bytes.  A malformed frame with Size > 128 would overflow the reply
+	 * buffer and allow SendReply to leak stack data to the caller. */
+	if (pCmd->Size > sizeof(Reply.Data.Data))
+		return;
+
 	gSerialConfigCountDown_500ms = 12; // 6 sec
 
 	#ifdef ENABLE_FMRADIO
@@ -303,6 +313,12 @@ static void CMD_051D(const uint8_t *pBuffer)
 	Reply.Data.Offset = pCmd->Offset;
 
 	bIsLocked = bHasCustomAesKey ? gIsLocked : bHasCustomAesKey;
+
+	/* [hyggx fix] Verify the entire write range lies within the 8 KB EEPROM.
+	 * Without this, an adversary can supply a large Offset that causes writes
+	 * to walk past address 0x2000 into undefined I2C space. */
+	if ((uint32_t)pCmd->Offset + pCmd->Size > 0x2000u)
+		return;
 
 	if (!bIsLocked)
 	{

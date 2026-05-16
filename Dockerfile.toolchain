@@ -1,0 +1,9 @@
+FROM ubuntu:24.04
+ARG http_proxy
+ARG https_proxy
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      gcc-arm-none-eabi binutils-arm-none-eabi make git \
+      python3 python3-crcmod && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /build
