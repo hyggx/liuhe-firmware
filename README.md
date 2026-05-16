@@ -9,22 +9,27 @@ Custom firmware for the **Quansheng UV-K6 V1** (DP32G030 / ARM Cortex-M0), forke
 
 ## Hardware Target
 
-| Item     | Details                          |
-| -------- | -------------------------------- |
-| Radio    | Quansheng UV-K6 V1               |
-| MCU      | DP32G030 (ARM Cortex-M0, 48 MHz) |
-| Flash    | 512 KB internal                  |
-| RAM      | 16 KB                            |
-| Radio IC | BK4819 (VHF/UHF transceiver)     |
-| FM IC    | BK1080 (WBFM broadcast RX)       |
-| Display  | ST7565 128x64 LCD                |
+> **Supported hardware:** UV-K6 V1 **final production version only** — the variant with the
+> 512 KB (4 Mbit) external EEPROM. V1 is now end-of-life; only dealer stock remains.
+> This firmware is **not compatible** with UV-K6 V3 or UV-K1 (PY32F071 MCU).
+
+| Item      | Details                                                   |
+| --------- | --------------------------------------------------------- |
+| Radio     | Quansheng UV-K6 V1 (final production, EOL)                |
+| MCU       | DP32G030 (ARM Cortex-M0, 48 MHz)                          |
+| MCU Flash | 64 KB internal — firmware code lives here                 |
+| MCU RAM   | 16 KB                                                     |
+| EEPROM    | 512 KB external I2C — channel data, settings, calibration |
+| Radio IC  | BK4819 (VHF/UHF transceiver)                              |
+| FM IC     | BK1080 (WBFM broadcast RX)                                |
+| Display   | ST7565 128x64 LCD                                         |
 
 ## Project Status
 
 See [CHANGELOG.md](./CHANGELOG.md) for detailed progress.
 
-| Phase   | Description                    | Status        |
-| ------- | ------------------------------ | ------------- |
+| Phase   | Description                    | Status      |
+| ------- | ------------------------------ | ----------- |
 | Phase 0 | Baseline build verification    | Done        |
 | Phase 1 | P0 security hardening          | In progress |
 | Phase 2 | Regression test suite          | Planned     |
@@ -88,22 +93,22 @@ Use the [UV-K5 Web Flasher](https://egzumer.github.io/uvtools) with `firmware.pa
 
 Edit the `ENABLE_XXX` flags at the top of `Makefile` (`0` = disable, `1` = enable).
 
-| Option                        | Description                                  |
-| ----------------------------- | -------------------------------------------- |
-| `ENABLE_UART`                 | PC configuration via UART - keep enabled    |
-| `ENABLE_FMRADIO`              | WBFM broadcast receiver                      |
-| `ENABLE_VOX`                  | Voice-operated TX                            |
-| `ENABLE_DTMF_CALLING`         | DTMF call system                             |
-| `ENABLE_FLASHLIGHT`           | Top LED (on / blink / SOS)                   |
-| `ENABLE_SPECTRUM`             | Spectrum analyzer (`F`+`5`)                  |
-| `ENABLE_AM_FIX`               | Dynamic AM front-end gain                    |
-| `ENABLE_RSSI_BAR`             | dBm/S-meter bar                              |
-| `ENABLE_AUDIO_BAR`            | TX audio level bar                           |
-| `ENABLE_BIG_FREQ`             | Large frequency font                         |
-| `ENABLE_WIDE_RX`              | 18 MHz - 1300 MHz RX range                  |
-| `ENABLE_SCAN_RANGES`          | Frequency range scan mode                    |
-| `ENABLE_NO_CODE_SCAN_TIMEOUT` | Disable 32s CTCSS/DCS scan timeout           |
-| `ENABLE_LTO`                  | Link-time optimization (reduces size)        |
+| Option                        | Description                              |
+| ----------------------------- | ---------------------------------------- |
+| `ENABLE_UART`                 | PC configuration via UART - keep enabled |
+| `ENABLE_FMRADIO`              | WBFM broadcast receiver                  |
+| `ENABLE_VOX`                  | Voice-operated TX                        |
+| `ENABLE_DTMF_CALLING`         | DTMF call system                         |
+| `ENABLE_FLASHLIGHT`           | Top LED (on / blink / SOS)               |
+| `ENABLE_SPECTRUM`             | Spectrum analyzer (`F`+`5`)              |
+| `ENABLE_AM_FIX`               | Dynamic AM front-end gain                |
+| `ENABLE_RSSI_BAR`             | dBm/S-meter bar                          |
+| `ENABLE_AUDIO_BAR`            | TX audio level bar                       |
+| `ENABLE_BIG_FREQ`             | Large frequency font                     |
+| `ENABLE_WIDE_RX`              | 18 MHz - 1300 MHz RX range               |
+| `ENABLE_SCAN_RANGES`          | Frequency range scan mode                |
+| `ENABLE_NO_CODE_SCAN_TIMEOUT` | Disable 32s CTCSS/DCS scan timeout       |
+| `ENABLE_LTO`                  | Link-time optimization (reduces size)    |
 
 Full list: see comments in [Makefile](./Makefile).
 
