@@ -199,7 +199,7 @@ static void SendVersion(void)
 	Reply.Header.ID = 0x0515;
 	Reply.Header.Size = sizeof(Reply.Data);
 	/* Version[16] must hold AUTHOR_STRING + " " + VERSION_STRING (+ null).
-	 * Current build: "EGZUMER 7607f0a" = 15 chars + null = 16 bytes — exact fit.
+	 * Current build: "Hygg c3dea69" = 12 chars + null = 13 bytes, fits in 16.
 	 * If AUTHOR_STRING is ever lengthened, replace this with strncpy. */
 	strcpy(Reply.Data.Version, Version);
 	Reply.Data.bHasCustomAesKey = bHasCustomAesKey;
