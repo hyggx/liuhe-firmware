@@ -102,10 +102,44 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
   - Noise: both saturate at 127 — noise criterion disabled in hi-sens mode ✓
   - Glitch: open 100→200 (×2), close 90 (unchanged) — wide window ✓
 
+  **Field verification (2026-05-17):**
+  Tested on UV-K6 V1 with Huahong S518+ 8 cm stub antenna (lower gain than
+  stock antenna; signal more likely to dwell in the squelch boundary zone).
+  At ~−100 dBm (S4–S6) on a UHF simplex frequency, stock V1 firmware
+  exhibited audible background noise bursts consistent with squelch chatter
+  in the RSSI 25–40 hysteresis-inversion window.  Hygg firmware (this fix)
+  produced clean, stable audio under identical conditions.  Hardware and
+  antenna unchanged between tests; improvement confirmed as firmware-only.
+
+### Ham Core — Phase 4a (branch: `k6-hardening`, commit: `46eca1c`)
+
+Flash budget (2026-05-17 measured, current config):
+`text 57528 B / 61440 B` — **3912 B free**.
+
+- **[ham] `settings.c` — S-meter IARU R1 default calibration** —
+  Changed default S0/S9 levels from 130/76 to **127/73** to comply with IARU
+  Region 1 Technical Recommendation R.1: S9 = −73 dBm, 6 dB per S-unit,
+  giving S0 = −127 dBm.  The 54 dBm / 9 S-unit span is unchanged; only
+  the absolute S9 reference is corrected by 3 dBm.  Takes effect on factory
+  reset or first boot with uninitialised EEPROM.
+
+- **[fix] `ui/main.c` — `ENABLE_RSSI_BAR=0` build failure** —
+  Static IIR state variables (`rssi_disp_dBm`, `rssi_disp_seeded`,
+  `rssi_disp_vfo`) were declared outside the `#ifdef ENABLE_RSSI_BAR` guard,
+  causing `-Werror=unused-variable` when the feature was disabled.  Wrapped
+  in the appropriate `#ifdef`; all build configurations now compile cleanly.
+
+- **[security] `app/uart.c` `SendVersion` — bounded version string copy** —
+  Replaced `strcpy(Reply.Data.Version, Version)` with
+  `strncpy(..., sizeof − 1)` plus explicit null termination.  Eliminates
+  the latent buffer overflow if `AUTHOR_STRING` or `VERSION_STRING` is ever
+  lengthened beyond 14 characters.
+
 ### Security — Phase 1 (branch: `k6-hardening`)
 
-Confirmed fixes applied.  Flash budget: `text 61396 B / 61440 B` (0 B free after
-this patch set — any future addition requires disabling an `ENABLE_` feature first).
+Confirmed fixes applied.  Flash budget note: the `text 61396 B` figure below
+was measured with `ENABLE_FMRADIO=1`; current config (`FMRADIO=0`) measures
+`text 57428 B / 61440 B` (3912 B free before the Phase 4a commit above).
 
 - **[P0] `driver/eeprom.c`** — `EEPROM_WriteBuffer`: corrected upper-bound check from
   `Address >= 0x2000` to `Address > (0x2000 - 8)` so the 8-byte page write cannot
