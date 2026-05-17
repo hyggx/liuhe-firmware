@@ -138,8 +138,10 @@ void SETTINGS_InitEEPROM(void)
 			gEeprom.S9_LEVEL = Data[2];
 		}
 		else {
-			gEeprom.S0_LEVEL = 130;
-			gEeprom.S9_LEVEL = 76;
+			// IARU Region 1 Technical Recommendation R.1:
+			// S9 = -73 dBm, 6 dB per S-unit → S0 = -127 dBm
+			gEeprom.S0_LEVEL = 127;
+			gEeprom.S9_LEVEL = 73;
 		}
 	#endif
 

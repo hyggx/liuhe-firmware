@@ -42,9 +42,11 @@ center_line_t center_line = CENTER_LINE_NONE;
 // IIR low-pass state for the RSSI bar display.
 // Seeded on the first valid RX sample (or after VFO change) to avoid the
 // cold-start value dragging the display for multiple update cycles.
+#ifdef ENABLE_RSSI_BAR
 static int16_t       rssi_disp_dBm    = 0;
 static bool          rssi_disp_seeded = false;
 static const void   *rssi_disp_vfo    = NULL;  // tracks VFO pointer for change detection
+#endif
 
 // Per-band RSSI correction offsets (dBm).
 //

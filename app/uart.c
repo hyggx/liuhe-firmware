@@ -198,10 +198,10 @@ static void SendVersion(void)
 
 	Reply.Header.ID = 0x0515;
 	Reply.Header.Size = sizeof(Reply.Data);
-	/* Version[16] must hold AUTHOR_STRING + " " + VERSION_STRING (+ null).
-	 * Current build: "Hygg c3dea69" = 12 chars + null = 13 bytes, fits in 16.
-	 * If AUTHOR_STRING is ever lengthened, replace this with strncpy. */
-	strcpy(Reply.Data.Version, Version);
+	/* Version[16]: copy with bounded write; null-terminate unconditionally
+	 * so any future growth of AUTHOR_STRING or VERSION_STRING cannot overflow. */
+	strncpy(Reply.Data.Version, Version, sizeof(Reply.Data.Version) - 1);
+	Reply.Data.Version[sizeof(Reply.Data.Version) - 1] = '\0';
 	Reply.Data.bHasCustomAesKey = bHasCustomAesKey;
 	Reply.Data.bIsInLockScreen = bIsInLockScreen;
 	Reply.Data.Challenge[0] = gChallenge[0];
