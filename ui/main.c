@@ -232,7 +232,7 @@ void DisplayRSSIBar(const bool now)
 	const int16_t raw_dBm =
 		BK4819_GetRSSI_dBm()
 #ifdef ENABLE_AM_FIX
-		+ ((gSetting_AM_fix && gRxVfo->Modulation == MODULATION_AM) ? AM_fix_get_gain_diff() : 0)
+		+ ((gSetting_AM_fix && gRxVfo->Modulation == MODULATION_AM) ? AM_fix_get_gain_diff(gEeprom.RX_VFO) : 0)
 #endif
 		+ dBmCorrTable[gRxVfo->Band];
 

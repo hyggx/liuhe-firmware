@@ -371,7 +371,7 @@ int8_t BK4819_GetRxGain_dB(void)
 int16_t BK4819_GetRSSI_dBm(void)
 {
 	// REG_67[8:0] is a 9-bit value with 0.5 dB/LSB resolution.
-	// Formula: dBm = raw/2 - 160  (raw 0 → -160 dBm, raw 511 → -104.5 dBm).
+	// Formula: dBm = raw/2 - 160  (raw 0 → -160 dBm, raw 130 → -95 dBm).
 	// Add 1 before the integer divide to round to nearest 1 dBm instead of
 	// always truncating downward; without this every odd raw value is mapped
 	// 0.5 dBm too low (visible as a systematic −0.5 dBm bias on the S-meter).

@@ -229,7 +229,7 @@ unsigned int hold_counter[2] = {0, 0};
 // Using -95 dBm leaves exactly 6 dB of headroom for full modulation.
 const int16_t desired_rssi = (-95 + 160) * 2;
 
-int8_t currentGainDiff;
+int8_t currentGainDiff[2];  // per-VFO gain compensation (index 0 = VFO A, 1 = VFO B)
 bool enabled = true;
 
 void AM_fix_init(void)
@@ -259,6 +259,12 @@ void AM_fix_reset(const unsigned vfo)
 	prev_rssi[vfo] = 0;
 	hold_counter[vfo] = 0;
 	gain_table_index_prev[vfo] = 0;
+	// FIX (Hygg): AM_fix_init() starts at max gain but AM_fix_reset() did not;
+	// after tuning away from a strong signal the index was left at a low-gain
+	// position, causing a slow (≈400 ms) ramp-up and near-silence on the new
+	// weak-signal channel.  Reset to max gain so the AGC can attenuate
+	// immediately if the new channel is strong.
+	gain_table_index[vfo] = gain_table_size - 1u;
 }
 
 // adjust the RX gain to try and prevent the AM demodulator from
@@ -392,7 +398,7 @@ void AM_fix_10ms(const unsigned vfo)
 		//
 		// NOTE: Previously used gain_table[0].gain_dB (= -7 dB) as the reference,
 		// which introduced a constant -7 dB error when AM Fix was at full gain.
-		currentGainDiff = -(int8_t)gain_table[index].gain_dB;
+		currentGainDiff[vfo] = -(int8_t)gain_table[index].gain_dB;
 		BK4819_WriteRegister(BK4819_REG_13, gain_table[index].reg_val);
 #ifdef ENABLE_AGC_SHOW_DATA
 		UI_MAIN_PrintAGC(true);
@@ -417,9 +423,9 @@ void AM_fix_print_data(const unsigned vfo, char *s) {
 }
 #endif
 
-int8_t AM_fix_get_gain_diff()
+int8_t AM_fix_get_gain_diff(unsigned vfo)
 {
-	return currentGainDiff;
+	return currentGainDiff[vfo < 2u ? vfo : 0u];
 }
 
 void AM_fix_enable(bool on)
