@@ -891,6 +891,10 @@ void RADIO_SetModulation(ModulationMode_t modulation)
 
 	BK4819_SetAF(mod);
 
+	// Force AF DAC gain (REG_48 bits[3:0]) to max on every modulation change.
+	// Volume is controlled by the higher-resolution AF Rx Gain-2 (VOLUME_GAIN, 0.5 dB/step).
+	// This overrides gEeprom.DAC_GAIN in the normal RX squelch-open path; only the
+	// post-TX RADIO_SetupRegisters() path uses the stored DAC_GAIN value.
 	BK4819_SetRegValue(afDacGainRegSpec, 0xF);
 	BK4819_WriteRegister(BK4819_REG_3D, modulation == MODULATION_USB ? 0 : 0x2AAB);
 	BK4819_SetRegValue(afcDisableRegSpec, modulation != MODULATION_FM);

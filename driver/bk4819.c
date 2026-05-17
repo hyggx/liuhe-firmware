@@ -92,6 +92,14 @@ void BK4819_Init(void)
 		( 8u <<  0));     // AF DAC Gain (after Gain-1 and Gain-2)
 
 #if 1
+	// REG_09: Goertzel DFT coefficients for DTMF/SelCall detection
+	// Formula: coeff[i] = (int8_t)round(2 * cos(2*pi * f_i / Fs) * 64)
+	// Implied Fs ≈ 8450 Hz (BK4819 DTMF ADC sample rate)
+	//
+	// Index  0-3 : row    fundamentals  697,  770,  852,  941 Hz
+	// Index  4-7 : column fundamentals 1209, 1336, 1477, 1633 Hz
+	// Index  8-11: row    2nd harmonics ~1394, ~1540, ~1704, ~1882 Hz
+	// Index 12-15: column 2nd harmonics ~2418, ~2672, ~2954, ~3266 Hz (stored as int8_t, hence >127)
 	const uint8_t dtmf_coeffs[] = {111, 107, 103, 98, 80, 71, 58, 44, 65, 55, 37, 23, 228, 203, 181, 159};
 	for (unsigned int i = 0; i < ARRAY_SIZE(dtmf_coeffs); i++)
 		BK4819_WriteRegister(BK4819_REG_09, (i << 12) | dtmf_coeffs[i]);
