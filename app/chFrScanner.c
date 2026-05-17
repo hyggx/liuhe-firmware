@@ -9,6 +9,14 @@ int8_t            gScanStateDir;
 bool              gScanKeepResult;
 bool              gScanPauseMode;
 
+// Number of regular (non-priority) channels to scan between priority-channel
+// insertions.  Stock behaviour was 1 (priority visited every 3rd step = 67%);
+// 8 gives ~20% overhead, which is far less disruptive to the main sweep.
+#ifndef SCAN_PRIORITY_INTERVAL
+#define SCAN_PRIORITY_INTERVAL 8
+#endif
+static uint8_t    scan_priority_counter;
+
 #ifdef ENABLE_SCAN_RANGES
 uint32_t          gScanRangeStart;
 uint32_t          gScanRangeStop;
@@ -40,9 +48,10 @@ void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_directi
 	
 	RADIO_SelectVfos();
 
-	gNextMrChannel   = gRxVfo->CHANNEL_SAVE;
-	currentScanList = SCAN_NEXT_CHAN_SCANLIST1;
-	gScanStateDir    = scan_direction;
+	gNextMrChannel        = gRxVfo->CHANNEL_SAVE;
+	currentScanList       = SCAN_NEXT_CHAN_SCANLIST1;
+	scan_priority_counter = 0;
+	gScanStateDir         = scan_direction;
 
 	if (IS_MR_CHANNEL(gNextMrChannel))
 	{	// channel mode
@@ -267,7 +276,18 @@ static void NextMemChannel(void)
 	gScanPauseDelayIn_10ms = scan_pause_delay_in_3_10ms;
 #endif
 
-	if (enabled)
-		if (++currentScanList >= SCAN_NEXT_NUM)
-			currentScanList = SCAN_NEXT_CHAN_SCANLIST1;  // back round we go
+	if (enabled) {
+		if (currentScanList == SCAN_NEXT_CHAN_MR) {
+			// Stay in regular sweep until interval expires, then revisit priority.
+			if (++scan_priority_counter >= SCAN_PRIORITY_INTERVAL) {
+				scan_priority_counter = 0;
+				currentScanList = SCAN_NEXT_CHAN_SCANLIST1;
+			}
+			// else: remain in MR state for next step
+		} else {
+			// Just visited a priority channel; advance to the next priority state.
+			if (++currentScanList >= SCAN_NEXT_NUM)
+				currentScanList = SCAN_NEXT_CHAN_SCANLIST1;
+		}
+	}
 }
