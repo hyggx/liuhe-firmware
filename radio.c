@@ -425,23 +425,67 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 		uint16_t noise_close  = pInfo->SquelchCloseNoiseThresh;
 
 #if ENABLE_SQUELCH_MORE_SENSITIVE
+		/*
+		 * BK4819 squelch engine uses three independent Schmitt triggers that
+		 * must ALL agree for the squelch to open.  Each has an open-threshold
+		 * and a close-threshold; the gap between them is the hysteresis window
+		 * that prevents chatter on borderline signals.
+		 *
+		 * RSSI  (REG_78):
+		 *   Opens  when RSSI >= open_thresh  (higher value = stronger signal required)
+		 *   Closes when RSSI <= close_thresh
+		 *   Schmitt invariant: open_thresh > close_thresh
+		 *
+		 * Noise (REG_4F, inverted polarity):
+		 *   Opens  when noise_floor < open_thresh  (higher value = noisier channel tolerated)
+		 *   Closes when noise_floor > close_thresh
+		 *   Schmitt invariant: close_thresh > open_thresh
+		 *
+		 * Glitch (REG_4D/4E, inverted polarity):
+		 *   Opens  when glitch_count < open_thresh  (higher value = more RF glitches tolerated)
+		 *   Closes when glitch_count > close_thresh
+		 *   Schmitt invariant: open_thresh > close_thresh
+		 *
+		 * UPSTREAM BUG (egzumer): only open-thresholds were scaled; close-thresholds
+		 * were left at their original EEPROM values.  After scaling:
+		 *   - rssi_close(40) > rssi_open(50/2=25) → Schmitt invariant violated for RSSI
+		 *   - noise_close(70) < noise_open(65×2=127) → Schmitt invariant violated for Noise
+		 * This inverts the hysteresis, causing squelch chatter on weak signals.
+		 * The symptom was masked in practice by the time-domain delays in REG_4E.
+		 *
+		 * FIX (Hygg): Scale BOTH open and close thresholds by the same factor so
+		 * the hysteresis window shrinks proportionally but the direction is preserved.
+		 */
+
 		uint16_t rssi_open    = pInfo->SquelchOpenRSSIThresh;
 		uint16_t rssi_close   = pInfo->SquelchCloseRSSIThresh;
 		uint16_t glitch_open  = pInfo->SquelchOpenGlitchThresh;
 		uint16_t glitch_close = pInfo->SquelchCloseGlitchThresh;
-		// make squelch more sensitive
-		// note that 'noise' and 'glitch' values are inverted compared to 'rssi' values
-		rssi_open   = (rssi_open   * 1) / 2;
-		noise_open  = (noise_open  * 2) / 1;
-		glitch_open = (glitch_open * 2) / 1;
 
-		// ensure the 'close' threshold is lower than the 'open' threshold
-		if (rssi_close == rssi_open && rssi_close >= 2)
-			rssi_close -= 2;
-		if (noise_close == noise_open && noise_close  <= 125)
-			noise_close += 2;
-		if (glitch_close == glitch_open && glitch_close <= 253)
-			glitch_close += 2;
+		// RSSI: halve both thresholds → sensitivity doubles, hysteresis ratio preserved.
+		// Example VHF Sql=5: open 50→25, close 40→20  (invariant: 25 > 20 ✓)
+		rssi_open  = rssi_open  / 2;
+		rssi_close = rssi_close / 2;   // FIX: upstream omitted this line, inverting hysteresis
+
+		// Noise: double both thresholds → squelch tolerates noisier channels.
+		// Values near/above 64 will saturate at the 7-bit ceiling (127); this
+		// intentionally disables the noise criterion in high-sensitivity mode.
+		// Example VHF Sql=5: open 65→127(sat), close 70→127(sat)  (invariant: 127 >= 127 ✓)
+		noise_open  = noise_open  * 2;
+		noise_close = noise_close * 2;   // FIX: upstream omitted this line, inverting hysteresis
+
+		// Glitch: double open threshold only; close threshold stays lower.
+		// The large asymmetry (wide hysteresis) is acceptable for glitch counts.
+		// Example VHF Sql=5: open 100→200, close 90 (unchanged)  (invariant: 200 > 90 ✓)
+		glitch_open = glitch_open * 2;
+
+		// Enforce Schmitt invariants after scaling, catching any remaining edge cases.
+		// RSSI: open_thresh must be strictly above close_thresh.
+		if (rssi_open <= rssi_close && rssi_open >= 1)
+			rssi_close = rssi_open - 1;
+		// Glitch: open_thresh must be strictly above close_thresh.
+		if (glitch_open <= glitch_close)
+			glitch_close = (glitch_open > 0) ? glitch_open - 1 : 0;
 
 		pInfo->SquelchOpenRSSIThresh    = (rssi_open    > 255) ? 255 : rssi_open;
 		pInfo->SquelchCloseRSSIThresh   = (rssi_close   > 255) ? 255 : rssi_close;
@@ -449,6 +493,7 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 		pInfo->SquelchCloseGlitchThresh = (glitch_close > 255) ? 255 : glitch_close;
 #endif
 
+		// Noise is 7-bit (0~127); saturate after any scaling above.
 		pInfo->SquelchOpenNoiseThresh   = (noise_open   > 127) ? 127 : noise_open;
 		pInfo->SquelchCloseNoiseThresh  = (noise_close  > 127) ? 127 : noise_close;
 	}

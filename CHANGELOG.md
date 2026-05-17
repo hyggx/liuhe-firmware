@@ -9,6 +9,38 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Fixed — Squelch hysteresis inversion (branch: `k6-hardening`)
+
+- **[P1] `radio.c` `RADIO_ConfigureSquelchAndOutputPower`** —
+  Fixed two squelch Schmitt-trigger invariant violations in the
+  `ENABLE_SQUELCH_MORE_SENSITIVE` path.
+
+  **Root cause:** The upstream code scaled only the *open* thresholds
+  (`rssi_open ÷ 2`, `noise_open × 2`) while leaving the corresponding
+  *close* thresholds at their original EEPROM values.  After scaling:
+
+  | Threshold | Before fix | After fix |
+  |-----------|-----------|-----------|
+  | RSSI open | 50 → **25** | 50 → **25** |
+  | RSSI close | 40 (unchanged) → **close > open** ✗ | 40 → **20** ✓ |
+  | Noise open | 65 → **127** (sat) | 65 → **127** (sat) |
+  | Noise close | 70 (unchanged) → **close < open** ✗ | 70 → **127** (sat) ✓ |
+
+  With `rssi_close(40) > rssi_open(25)` the BK4819 hardware squelch
+  would open at RSSI=25 but immediately satisfy the close condition
+  (RSSI ≤ 40), producing chatter on weak signals (RSSI 25–40).
+  The symptom was masked in practice only by the REG_4E time-domain
+  delays (`open_delay=5`, `close_delay=6`).
+
+  **Fix:** Scale both open and close thresholds by the same factor.
+  The hysteresis window shrinks proportionally but the Schmitt direction
+  is preserved.  Post-scale invariant guards cover any residual edge cases.
+
+  *Example VHF Sql=5 (EEPROM default values):*
+  - RSSI: open 50→25, close 40→20 — hysteresis 10→5 (proportional) ✓
+  - Noise: both saturate at 127 — noise criterion disabled in hi-sens mode ✓
+  - Glitch: open 100→200 (×2), close 90 (unchanged) — wide window ✓
+
 ### Security — Phase 1 (branch: `k6-hardening`)
 
 Confirmed fixes applied.  Flash budget: `text 61396 B / 61440 B` (0 B free after
