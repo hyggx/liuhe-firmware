@@ -127,6 +127,32 @@ this patch set — any future addition requires disabling an `ENABLE_` feature f
   that the `!(regVal & (1 << 15)) == enable` expression is logically correct as
   written (C precedence applies `!` before `==` for this expression with parentheses).
 
+### Fixed — AM Fix follow-up bugs (self-audit, branch: `k6-hardening`)
+
+- **[P2] `am_fix.c` `AM_fix_reset` — gain index not reset to max gain** —
+  `AM_fix_init()` was corrected (prior commit) to start at `gain_table_size − 1`
+  (0 dB, maximum gain), but `AM_fix_reset()` — called on every frequency change —
+  still left `gain_table_index[vfo]` at whatever the previous channel had set it to.
+  Tuning from a strong AM station (where the AGC had reduced the index to a low-gain
+  value) to a weak station caused ~400 ms of near-silence while the AGC ramped the
+  index back up to maximum.  Fix: `AM_fix_reset()` now also sets
+  `gain_table_index[vfo] = gain_table_size − 1`.
+
+- **[P2] `am_fix.c` `currentGainDiff` — single global, not per-VFO** —
+  `currentGainDiff` was a single `int8_t` updated by `AM_fix_10ms(vfo)` for whichever
+  VFO was last processed.  In dual-watch mode with both VFOs on AM, the S-meter in
+  `DisplayRSSIBar` would apply the gain compensation from the *last-processed* VFO
+  rather than the *currently-displayed* VFO, producing an incorrect dBm reading.
+  Fix: changed to `int8_t currentGainDiff[2]` (indexed by VFO); `AM_fix_get_gain_diff`
+  now takes an `unsigned vfo` parameter.  Call sites updated:
+  `ui/main.c` passes `gEeprom.RX_VFO`; `app/spectrum.c` passes the module-scope `vfo`.
+
+- **[P3] `driver/bk4819.c` comment arithmetic error** —
+  The `BK4819_GetRSSI_dBm` documentation comment stated
+  `raw 511 → −104.5 dBm`, but `(511 + 1) / 2 − 160 = +96 dBm`.
+  Corrected to `raw 130 → −95 dBm`, which matches the AM Fix AGC target and is
+  easily verified: `130 × 0.5 − 160 = −95 dBm`.
+
 ### Deferred — requires design / more analysis
 
 - `app/dtmf.c` `DTMF_FindContact` — unbounded `pResult` write; all current callers
