@@ -135,6 +135,27 @@ Flash budget (2026-05-17 measured, current config):
   the latent buffer overflow if `AUTHOR_STRING` or `VERSION_STRING` is ever
   lengthened beyond 14 characters.
 
+### Config — FM radio enabled, DTMF calling removed (branch: `k6-hardening`, commit: `f4293a0`)
+
+Flash budget (2026-05-17 measured, field-verified):
+`text 58960 B / 61440 B` — **2480 B free**.
+
+- **[config] `Makefile` — `ENABLE_FMRADIO=1`** —
+  FM WBFM broadcast receiver re-enabled (was disabled at project start).
+  Adds `driver/bk1080.o`, `app/fm.o`, `ui/fmradio.o` — measured cost
+  ~4.7 KB, not the originally estimated 1 KB.
+
+- **[config] `Makefile` — `ENABLE_DTMF_CALLING=0`** —
+  DTMF calling protocol disabled to reclaim 3300 B needed to fit FM radio.
+  This removes the ANI-ID / contact-list / ring-reply call protocol only.
+  The following DTMF features are **unaffected**: manual code entry before
+  PTT (repeater access), PTT-ID auto UP/DOWN code, DTMF side-tone, preload
+  time, and live DTMF decoder display.  Menu item count: 60 → **55** items
+  (removed: `ANI ID`, `D Resp`, `D Hold`, `D Decd`, `D List`).
+
+  **Field verification (2026-05-17):** FM reception, all remaining menu
+  items, VFO/MR operation, and PTT-ID confirmed working on UV-K6 V1 hardware.
+
 ### Security — Phase 1 (branch: `k6-hardening`)
 
 Confirmed fixes applied.  Flash budget note: the `text 61396 B` figure below
