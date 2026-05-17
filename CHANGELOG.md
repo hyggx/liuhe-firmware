@@ -43,6 +43,33 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
   from 50% attenuation (FIR) to 75% (IIR), reducing spurious gain hunting
   on impulsive interference.
 
+### Fixed — RSSI measurement bugs (branch: `k6-hardening`)
+
+- **[P2] `driver/bk4819.c` `BK4819_GetRSSI_dBm`** —
+  Integer division `raw / 2` always truncates toward zero, causing a
+  systematic −0.5 dBm bias on every odd raw value (visible as a 1 dBm
+  "staircase" where two adjacent raw readings map to the same displayed
+  value).  Fix: `(raw + 1) / 2` rounds to nearest 1 dBm instead.
+  Same fix applied to `Rssi2DBm()` in `app/spectrum.c`.
+
+- **[P2] `am_fix.c` `AM_fix_10ms` `currentGainDiff` reference point** —
+  The gain-compensation term added to the RSSI display was computed as
+  `gain_table[0].gain_dB − current_gain_dB`, where `gain_table[0].gain_dB`
+  is the "original register" entry at −7 dB.  Using −7 dB as the reference
+  instead of 0 dB introduced a constant −7 dBm error in the S-meter
+  whenever AM Fix was at maximum gain (no attenuation).  Fix: reference is
+  now 0 dB: `currentGainDiff = −current_gain_dB`.  Result: displayed level
+  is accurate at all gain steps, with zero correction error at full gain.
+
+- **[P3] `ui/main.c` `DisplayRSSIBar` — single-sample display instability** —
+  The 500 ms display update took a single point-sample of REG_67 with no
+  temporal averaging.  On marginal signals or in the presence of impulse
+  noise, the displayed dBm value could jump ±5–10 dBm between ticks,
+  making the S-meter hard to read.  Added a first-order IIR low-pass filter
+  (α = ½, τ ≈ 500 ms) on the final corrected dBm value.  Each 500 ms
+  sample contributes 50% weight; the smoother reseeds immediately on VFO
+  change so stale readings from the previous channel are never displayed.
+
 ### Fixed — Squelch hysteresis inversion (branch: `k6-hardening`)
 
 - **[P1] `radio.c` `RADIO_ConfigureSquelchAndOutputPower`** —

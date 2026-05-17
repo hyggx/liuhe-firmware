@@ -381,7 +381,18 @@ void AM_fix_10ms(const unsigned vfo)
 
 		// remember the new table index
 		gain_table_index_prev[vfo] = index;
-		currentGainDiff = gain_table[0].gain_dB - gain_table[index].gain_dB;
+		// Gain compensation for the RSSI display (see DisplayRSSIBar in ui/main.c).
+		// DisplayRSSIBar adds currentGainDiff to the raw BK4819_GetRSSI_dBm() reading
+		// so that the displayed value represents the signal level at the antenna
+		// port rather than at the IF input (which is reduced by the AM Fix AGC).
+		//
+		// Reference is 0 dB (gain_table[42] = full gain, no attenuation).
+		// currentGainDiff = 0   when AM Fix is at max gain  → no correction needed.
+		// currentGainDiff = +37 when AM Fix set gain to -37 dB → adds 37 dB back.
+		//
+		// NOTE: Previously used gain_table[0].gain_dB (= -7 dB) as the reference,
+		// which introduced a constant -7 dB error when AM Fix was at full gain.
+		currentGainDiff = -(int8_t)gain_table[index].gain_dB;
 		BK4819_WriteRegister(BK4819_REG_13, gain_table[index].reg_val);
 #ifdef ENABLE_AGC_SHOW_DATA
 		UI_MAIN_PrintAGC(true);

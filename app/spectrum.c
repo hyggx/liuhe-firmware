@@ -113,7 +113,9 @@ static uint8_t DBm2S(int dbm) {
 }
 
 static int Rssi2DBm(uint16_t rssi) {
-  return (rssi / 2) - 160 + dBmCorrTable[gRxVfo->Band];
+  // Same rounding fix as BK4819_GetRSSI_dBm(): +1 before dividing by 2
+  // converts truncation to nearest-integer rounding (eliminates −0.5 dBm bias).
+  return (int)((rssi + 1) / 2) - 160 + dBmCorrTable[gRxVfo->Band];
 }
 
 static uint16_t GetRegMenuValue(uint8_t st) {

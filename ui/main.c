@@ -39,14 +39,41 @@
 
 center_line_t center_line = CENTER_LINE_NONE;
 
+// IIR low-pass state for the RSSI bar display.
+// Seeded on the first valid RX sample (or after VFO change) to avoid the
+// cold-start value dragging the display for multiple update cycles.
+static int16_t       rssi_disp_dBm    = 0;
+static bool          rssi_disp_seeded = false;
+static const void   *rssi_disp_vfo    = NULL;  // tracks VFO pointer for change detection
+
+// Per-band RSSI correction offsets (dBm).
+//
+// BK4819 REG_67 measures the signal level at the IF stage, *after* the RF
+// front-end gain chain (external LNA + BK4819 internal LNA/Mixer/PGA).
+// The chain gain varies with frequency band and hardware configuration, so
+// the raw dBm formula (raw/2 - 160) over-reads the actual antenna-port level
+// by a band-dependent amount.  These empirically measured offsets compensate.
+//
+// They are global constants (same for all units).  Per-unit factory
+// calibration data is stored in EEPROM at 0x1EC0/0x1EC8 but is only used by
+// the legacy 4-bar path (ENABLE_RSSI_BAR not defined).
+//
+// Band mapping (see frequencyBandTable in frequencies.c):
+//   Index 0  BAND1  50–108 MHz   (VHF low / Part 15)
+//   Index 1  BAND2  108–137 MHz  (Aviation AIR)
+//   Index 2  BAND3  137–174 MHz  (VHF — marine, NOAA, APT)
+//   Index 3  BAND4  174–350 MHz  (VHF/UHF mid)
+//   Index 4  BAND5  350–400 MHz
+//   Index 5  BAND6  400–470 MHz  (UHF — PMR, LMR)
+//   Index 6  BAND7  470–600 MHz  (UHF high / T-band)
 const int8_t dBmCorrTable[7] = {
-			-15, // band 1
-			-25, // band 2
-			-20, // band 3
-			-4, // band 4
-			-7, // band 5
-			-6, // band 6
-			 -1  // band 7
+			-15,  // BAND1   50–108 MHz
+			-25,  // BAND2  108–137 MHz  (aviation — external VHF LNA adds ~25 dB)
+			-20,  // BAND3  137–174 MHz
+			 -4,  // BAND4  174–350 MHz
+			 -7,  // BAND5  350–400 MHz
+			 -6,  // BAND6  400–470 MHz
+			 -1   // BAND7  470–600 MHz
 		};
 
 const char *VfoStateStr[] = {
@@ -197,12 +224,36 @@ void DisplayRSSIBar(const bool now)
 
 
 	const int16_t s0_dBm   = -gEeprom.S0_LEVEL;                  // S0 .. base level
-	const int16_t rssi_dBm =
+
+	// Instantaneous corrected signal level:
+	//   BK4819 raw dBm  +  AM Fix front-end gain compensation  +  band offset.
+	// The AM Fix term cancels the gain reduction applied by the software AGC so
+	// the display reflects the antenna-port level regardless of current gain step.
+	const int16_t raw_dBm =
 		BK4819_GetRSSI_dBm()
 #ifdef ENABLE_AM_FIX
 		+ ((gSetting_AM_fix && gRxVfo->Modulation == MODULATION_AM) ? AM_fix_get_gain_diff() : 0)
 #endif
 		+ dBmCorrTable[gRxVfo->Band];
+
+	// IIR low-pass filter applied to the display value (α = ½, τ ≈ 500 ms).
+	// Smooths the 500 ms point-sample so a single noisy reading does not cause
+	// a visible jump on the S-meter.  Reset whenever the active VFO changes so
+	// stale values from the previous channel are never shown.
+	if (gRxVfo != rssi_disp_vfo) {
+		// VFO changed — unseed so the first sample is shown immediately.
+		rssi_disp_seeded = false;
+		rssi_disp_vfo    = gRxVfo;
+	}
+	if (!rssi_disp_seeded) {
+		rssi_disp_dBm    = raw_dBm;   // seed: show first sample without lag
+		rssi_disp_seeded = true;
+	} else {
+		// α = ½: each new sample contributes 50% weight.
+		// Two consecutive equal readings converge in one tick.
+		rssi_disp_dBm += (int16_t)((raw_dBm - rssi_disp_dBm) >> 1);
+	}
+	const int16_t rssi_dBm = rssi_disp_dBm;
 
 	int s0_9 = gEeprom.S0_LEVEL - gEeprom.S9_LEVEL;
 	const uint8_t s_level = MIN(MAX((int32_t)(rssi_dBm - s0_dBm)*100 / (s0_9*100/9), 0), 9); // S0 - S9
