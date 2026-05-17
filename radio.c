@@ -901,7 +901,11 @@ void RADIO_SetModulation(ModulationMode_t modulation)
 void RADIO_SetupAGC(bool listeningAM, bool disable)
 {
 	static uint8_t lastSettings;
-	uint8_t newSettings = (listeningAM << 1) | (disable << 1);
+	// BUG FIX (Hygg): both fields were shifted left by 1, causing 'disable' to
+	// occupy the same bit as 'listeningAM'.  When listeningAM=1 and only 'disable'
+	// changed (e.g. Spectrum lockAGC toggle), the change was not detected and
+	// the function returned early without updating the AGC configuration.
+	uint8_t newSettings = (listeningAM << 1) | (disable << 0);   // FIX: disable→bit0
 	if(lastSettings == newSettings)
 		return;
 	lastSettings = newSettings;

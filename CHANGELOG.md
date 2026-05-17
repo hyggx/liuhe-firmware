@@ -9,6 +9,40 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Fixed — AM Fix bugs (branch: `k6-hardening`)
+
+- **[P1] `radio.c` `RADIO_SetupAGC`** —
+  Both `listeningAM` and `disable` parameters were shifted left by 1,
+  placing them in the same bit position of `newSettings`.  The change-detect
+  guard (`if lastSettings == newSettings return`) therefore ignored any
+  change in `disable` when `listeningAM=1`, preventing the AGC from being
+  updated when the Spectrum app toggled `lockAGC`.  Fix: `disable` now
+  occupies bit 0.
+
+- **[P1] `am_fix.c` `desired_rssi`** —
+  Target RF level changed from −89 dBm to −95 dBm.  100% AM modulation
+  produces sideband peaks at carrier +6 dB; targeting −89 dBm left no
+  headroom for heavily-modulated broadcast audio, causing occasional
+  clipping artefacts on music/full-modulation speech.  −95 dBm provides
+  exactly the 6 dB headroom required.
+
+- **[P2] `am_fix.c` `AM_fix_init`** —
+  Gain table index initialised to `gain_table_size − 1` (0 dB, max gain)
+  instead of 0 (the isolated "original" −7 dB entry).  Previously, on a
+  signal below −95 dBm at boot, the control loop would step from index 0
+  to index 1 = −93 dB (an 86 dB gain drop) before ramping back up over
+  ~420 ms.  Starting at max gain means weak signals are immediately
+  receivable; strong signals are attenuated on the very first 10 ms tick.
+
+- **[P3] `am_fix.c` `AM_fix_10ms` RSSI filter** —
+  Replaced the 2-tap FIR average with a first-order IIR low-pass filter
+  (α = 0.25, time constant ≈ 30 ms).  The old code stored the raw RSSI
+  reading as `prev_rssi` and averaged raw + raw; the new code stores the
+  *smoothed* value and updates it each tick via
+  `filtered += (raw − filtered) >> 2`.  Noise-spike rejection improved
+  from 50% attenuation (FIR) to 75% (IIR), reducing spurious gain hunting
+  on impulsive interference.
+
 ### Fixed — Squelch hysteresis inversion (branch: `k6-hardening`)
 
 - **[P1] `radio.c` `RADIO_ConfigureSquelchAndOutputPower`** —

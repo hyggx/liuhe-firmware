@@ -217,12 +217,17 @@ typedef union  {
 unsigned int gain_table_index[2] = {0, 0};
 // used simply to detect a changed gain setting
 unsigned int gain_table_index_prev[2] = {0, 0};
-// holds the previous RSSI level .. we do an average of old + new RSSI reading
+// holds the IIR-filtered RSSI level (smoothed); initialised to 0 = "unseeded"
 int16_t prev_rssi[2] = {0, 0};
 // to help reduce gain hunting, peak hold count down tick
 unsigned int hold_counter[2] = {0, 0};
-// -89dBm, any higher and the AM demodulator starts to saturate/clip/distort
-const int16_t desired_rssi = (-89 + 160) * 2;
+// Target RF level at the BK4819 AM demodulator input.
+// BUG FIX (Hygg): upstream used -89 dBm, but 100% AM modulation produces
+// sideband peaks at carrier + 6 dB.  Keeping the *carrier* at -89 dBm means
+// peaks reach -83 dBm, overdriving the demodulator on heavily-modulated
+// broadcast stations (audible as occasional clipping on music/speech peaks).
+// Using -95 dBm leaves exactly 6 dB of headroom for full modulation.
+const int16_t desired_rssi = (-95 + 160) * 2;
 
 int8_t currentGainDiff;
 bool enabled = true;
@@ -230,7 +235,12 @@ bool enabled = true;
 void AM_fix_init(void)
 {	// called at boot-up
 	for (int i = 0; i < 2; i++) {
-		gain_table_index[i] = 0;  // re-start with original QS setting
+		// BUG FIX (Hygg): starting at index 0 (the isolated "original" entry at
+		// -7 dB) then stepping to index 1 on a weak signal causes an 86 dB gain
+		// drop before the ramp-up begins (index 0 → index 1 = -93 dB).  Instead
+		// start at maximum gain so weak signals are immediately receivable; the
+		// control loop reduces gain on the very first tick if the signal is strong.
+		gain_table_index[i] = gain_table_size - 1u;  // FIX: start at max gain (0 dB)
 	}
 #if !LOOKUP_TABLE
 	CreateTable();
@@ -286,11 +296,22 @@ void AM_fix_10ms(const unsigned vfo)
 	}
 
 	int16_t rssi;
-	{	// sample the current RSSI level
-		// average it with the previous rssi (a bit of noise/spike immunity)
+	{	// Sample RSSI and smooth it through an IIR low-pass filter.
+		//
+		// Upstream used a 2-tap FIR average (stores raw new_rssi as prev).
+		// A first-order IIR with α=0.25 gives much better spike rejection:
+		//   filtered = filtered_prev + (raw - filtered_prev) / 4
+		// Time constant ≈ 3 ticks = 30 ms; a single-sample noise spike attenuated
+		// to 25% of its amplitude instead of 50% with the old 2-point average.
+		// prev_rssi now stores the *smoothed* value (not the raw reading).
 		const int16_t new_rssi = BK4819_GetRSSI();
-		rssi                   = (prev_rssi[vfo] > 0) ? (prev_rssi[vfo] + new_rssi) / 2 : new_rssi;
-		prev_rssi[vfo]         = new_rssi;
+		if (prev_rssi[vfo] == 0) {		// first sample after reset: seed the filter
+			rssi           = new_rssi;
+			prev_rssi[vfo] = new_rssi;
+		} else {
+			rssi           = prev_rssi[vfo] + ((new_rssi - prev_rssi[vfo]) >> 2);
+			prev_rssi[vfo] = rssi;		// store smoothed value for next tick
+		}
 	}
 
 #ifdef ENABLE_AM_FIX_SHOW_DATA
