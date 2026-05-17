@@ -1,4 +1,8 @@
 
+# Build profile (release | debug).  Override with: make PROFILE=debug
+PROFILE ?= release
+-include profiles/$(PROFILE).mk
+
 # compile options (see README.md for descriptions)
 # 0 = disable
 # 1 = enable
@@ -45,6 +49,9 @@ ENABLE_SCAN_RANGES            ?= 1
 ENABLE_AM_FIX_SHOW_DATA       ?= 0
 ENABLE_AGC_SHOW_DATA          ?= 0
 ENABLE_UART_RW_BK_REGS        ?= 0
+
+# ---- TX LOCK DEFAULT (set by profile; F_LOCK_ALL = TX disabled on blank EEPROM) ----
+DEFAULT_F_LOCK                ?= F_LOCK_ALL
 
 # ---- COMPILER/LINKER OPTIONS ----
 ENABLE_CLANG                  ?= 0
@@ -377,6 +384,8 @@ endif
 ifeq ($(ENABLE_CUSTOM_MENU_LAYOUT),1)
 	CFLAGS  += -DENABLE_CUSTOM_MENU_LAYOUT
 endif
+
+CFLAGS  += -DDEFAULT_F_LOCK=$(DEFAULT_F_LOCK)
 
 LDFLAGS =
 LDFLAGS += -z noexecstack -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld -Wl,--gc-sections

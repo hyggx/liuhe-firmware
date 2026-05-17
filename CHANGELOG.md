@@ -156,6 +156,32 @@ Flash budget (2026-05-17 measured, field-verified):
   **Field verification (2026-05-17):** FM reception, all remaining menu
   items, VFO/MR operation, and PTT-ID confirmed working on UV-K6 V1 hardware.
 
+### TX lock default + build profiles (branch: `k6-hardening`)
+
+- **[hardening] `settings.c` `SETTINGS_InitEEPROM`** —
+  TX-frequency lock fallback on invalid/blank EEPROM changed from
+  `F_LOCK_DEF` (permissive stock bands) to `DEFAULT_F_LOCK`, a
+  compile-time constant.  This value is `F_LOCK_ALL` (all TX disabled)
+  for the release profile and `F_LOCK_DEF` for the debug profile.
+  Existing user EEPROM values are **never overwritten** on normal boot;
+  the fallback only applies when `Data[0] >= F_LOCK_LEN` (0xFF on
+  brand-new or blank EEPROM).  TX lock can still be changed via the
+  hidden menu (PTT + upper side-key at power-on → `F LOCK`).
+
+- **[build] `Makefile` — `PROFILE` variable** —
+  Added profile-based build system.  `PROFILE ?= release` selects
+  `profiles/release.mk` by default; override with `make PROFILE=debug`.
+
+  | Profile | `DEFAULT_F_LOCK` | debug flags | UART BK regs |
+  |---------|-----------------|-------------|--------------|
+  | release | `F_LOCK_ALL`    | off         | off          |
+  | debug   | `F_LOCK_DEF`    | on          | on           |
+
+  Profile files use `:=` so they take precedence over any subsequent
+  `?=` defaults in the main Makefile.  Flash budget is identical for
+  both profiles (`text 58960 B`); the debug flags add negligible code
+  with LTO.
+
 ### Security — Phase 1 (branch: `k6-hardening`)
 
 Confirmed fixes applied.  Flash budget note: the `text 61396 B` figure below
