@@ -3,6 +3,7 @@
 firmware
 /firmware.packed.bin
 /firmware.bin
+/firmware.map
 /compiled-firmware
 .cache
 compile_commands.json
