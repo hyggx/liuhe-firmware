@@ -410,13 +410,9 @@ int     edit_index;
 
 void UI_DisplayMenu(void)
 {
-#ifdef ENABLE_CHINESE
-	const unsigned int menu_list_width = (gUiLanguage == UI_LANGUAGE_CN) ? 7 : 6;
-#else
-	const unsigned int menu_list_width = 6;
-#endif
-	const unsigned int menu_item_x1    = (8 * menu_list_width) + 2;
-	const unsigned int menu_item_x2    = LCD_WIDTH - 1;
+	// Full-width value area: x1=0, x2=LCD_WIDTH-1
+	const unsigned int menu_item_x1 = 0;
+	const unsigned int menu_item_x2 = LCD_WIDTH - 1;
 	unsigned int       i;
 	char               String[64];  // bigger cuz we can now do multi-line in one string (use '\n' char)
 
@@ -426,82 +422,27 @@ void UI_DisplayMenu(void)
 
 	UI_DisplayClear();
 
-#ifndef ENABLE_CUSTOM_MENU_LAYOUT
-		// original menu layout
-	for (i = 0; i < 3; i++)
-		if (gMenuCursor > 0 || i > 0)
-			if ((gMenuListCount - 1) != gMenuCursor || i != 2)
-		SUBV_PRINT(_MENU_TITLE(&MenuList[gMenuCursor + i - 1]), 0, 0, i * 2);
-
-	// invert the current menu list item pixels
-	for (i = 0; i < (8 * menu_list_width); i++)
+	// --- Top-bottom layout: title (pages 0-1) + value area (pages 2-7) ---
 	{
-		gFrameBuffer[2][i] ^= 0xFF;
-		gFrameBuffer[3][i] ^= 0xFF;
-	}
+		const int menu_index = gMenuCursor;
 
-	// draw vertical separating dotted line
-	for (i = 0; i < 7; i++)
-		gFrameBuffer[i][(8 * menu_list_width) + 1] = 0xAA;
+		// Title: current menu item name, big font, full width, centered
+		if (menu_index >= 0 && menu_index < (int)gMenuListCount)
+			SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, LCD_WIDTH, 0);
 
-	// draw the little sub-menu triangle marker
-	if (gIsInSubMenu)
-		memcpy(gFrameBuffer[0] + (8 * menu_list_width) + 1, BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
-
-	// draw the menu index number/count
-	sprintf(String, "%2u.%u", 1 + gMenuCursor, gMenuListCount);
-
-	UI_PrintStringSmallNormal(String, 2, 0, 6);
-
-#else
-	{	// new menu layout .. experimental & unfinished
-		const int menu_index = gMenuCursor;  // current selected menu item
-		i = 1;
-
-		if (!gIsInSubMenu) {
-#ifdef ENABLE_CHINESE
-			if (gUiLanguage != UI_LANGUAGE_CN)
-#endif
-			{
-				while (i < 2)
-				{	// leading menu items - small text
-					const int k = menu_index + i - 2;
-					if (k < 0)
-						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[gMenuListCount + k]), 0, 0, i);  // wrap-a-round
-					else if (k >= 0 && k < (int)gMenuListCount)
-						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[k]), 0, 0, i);
-					i++;
-				}
-			}
-			// current menu item - keep big n fat
-			if (menu_index >= 0 && menu_index < (int)gMenuListCount)
-				SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, 0, 2);
-			i = 3;  // explicit: trailing loop always starts at i=3
-
-#ifdef ENABLE_CHINESE
-			if (gUiLanguage != UI_LANGUAGE_CN)
-#endif
-			{
-				while (i < 4)
-				{	// trailing menu item - small text
-					const int k = menu_index + i - 2;
-					if (k >= 0 && k < (int)gMenuListCount)
-						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[k]), 0, 0, 1 + i);
-					else if (k >= (int)gMenuListCount)
-						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[gMenuListCount - k]), 0, 0, 1 + i);  // wrap-a-round
-					i++;
-				}
-			}
-			// draw the menu index number/count
-			sprintf(String, "%2u.%u", 1 + gMenuCursor, gMenuListCount);
-			UI_PrintStringSmallNormal(String, 2, 0, 6);
+		// Index counter: "N/Total" small, right-aligned at page 0
+		sprintf(String, "%u/%u", 1 + gMenuCursor, gMenuListCount);
+		{
+			// Right-align: each small char ~7px wide
+			const uint8_t idx_len = (uint8_t)strlen(String);
+			const uint8_t idx_x   = LCD_WIDTH - idx_len * 7;
+			UI_PrintStringSmallNormal(String, idx_x, 0, 0);
 		}
-		else if (menu_index >= 0 && menu_index < (int)gMenuListCount)
-		{	// current menu item
-			SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, 0, 0);
-		}
+
+		// Dotted horizontal separator at bottom pixel of page 1
+		for (i = 0; i < LCD_WIDTH; i++)
+			gFrameBuffer[1][i] |= 0x80;
 	}
-#endif
 
 	// **************
 
@@ -574,16 +515,16 @@ void UI_DisplayMenu(void)
 			if (!gIsInSubMenu || gInputBoxIndex == 0)
 			{
 				sprintf(String, "%3d.%05u", gSubMenuSelection / 100000, abs(gSubMenuSelection) % 100000);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 1, 8);
+				UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
 			}
 			else
 			{
 				const char * ascii = INPUTBOX_GetAscii();
 				sprintf(String, "%.3s.%.3s  ",ascii, ascii + 3);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 1, 8);
+				UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
 			}
 
-			UI_PrintString("MHz",  menu_item_x1, menu_item_x2, 3, 8);
+			UI_PrintString("MHz",  menu_item_x1, menu_item_x2, 5, 8);
 
 			already_printed = true;
 			break;
@@ -670,7 +611,7 @@ void UI_DisplayMenu(void)
 			const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
 
 			UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
-			UI_PrintString(String, menu_item_x1, menu_item_x2, 0, 8);
+			UI_PrintString(String, menu_item_x1, menu_item_x2, 2, 8);
 
 			if (valid && !gAskForConfirmation)
 			{	// show the frequency so that the user knows the channels frequency
@@ -681,11 +622,11 @@ void UI_DisplayMenu(void)
 				else
 				#endif
 					sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
+				UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
 			}
 
 			SETTINGS_FetchChannelName(String, gSubMenuSelection);
-			UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 2, 8);
+			UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 4, 8);
 			already_printed = true;
 			break;
 		}
@@ -695,34 +636,39 @@ void UI_DisplayMenu(void)
 			const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
 
 			UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
-			UI_PrintString(String, menu_item_x1, menu_item_x2, 0, 8);
+			UI_PrintString(String, menu_item_x1, menu_item_x2, 2, 8);
 
 			if (valid)
 			{
 				const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
 
 				if (!gIsInSubMenu || edit_index < 0)
-				{	// show the channel name
+				{	// show the channel name (browse mode)
 					SETTINGS_FetchChannelName(String, gSubMenuSelection);
 					char *pPrintStr = String[0] ? String : "--";
-					UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 2, 8);
+					UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
 				}
 				else
-				{	// show the channel name being edited
-					UI_PrintString(edit, menu_item_x1, 0, 2, 8);
+				{	// show the channel name being edited (edit mode)
+					UI_PrintString(edit, menu_item_x1, 0, 4, 8);
+					// Underline cursor: 1px at bottom of page 5 at the cursor character column
 					if (edit_index < 10)
-						UI_PrintString("^", menu_item_x1 + (8 * edit_index), 0, 4, 8);  // show the cursor
+					{
+						const uint8_t cx = (uint8_t)(edit_index * 8);
+						for (uint8_t dx = 0; dx < 7 && (cx + dx) < LCD_WIDTH; dx++)
+							gFrameBuffer[5][cx + dx] |= 0x80;
+					}
 				}
 
 				if (!gAskForConfirmation)
-				{	// show the frequency so that the user knows the channels frequency
+				{	// show the frequency
 					#ifdef ENABLE_CHINESE
 					if (gUiLanguage == UI_LANGUAGE_CN)
 						sprintf(String, "%u.%04u", frequency / 100000, (frequency % 100000) / 10);
 					else
 					#endif
 						sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
-					UI_PrintString(String, menu_item_x1, menu_item_x2, 4 + (gIsInSubMenu && edit_index >= 0), 8);
+					UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
 				}
 			}
 
@@ -914,15 +860,17 @@ void UI_DisplayMenu(void)
 			if (lines > 3)
 			{	// use small text
 				small = true;
-				if (lines > 7)
-					lines = 7;
+				if (lines > 6)
+					lines = 6;
 			}
 
-			// center vertically'ish
+			// Center vertically in the value area (pages 2-7 = 6 pages tall).
+			// Big font (2 pages/line): y = 5 - lines  (1 line→4, 2→3, 3→2)
+			// Small font (1 page/line): y = 2 + (6 - lines) / 2
 			if (small)
-				y = 3 - ((lines + 0) / 2);  // untested
+				y = 2 + (6 - lines) / 2;
 			else
-				y = 2 - ((lines + 0) / 2);
+				y = (lines <= 3) ? (5 - lines) : 2;
 
 			// draw the text lines
 			for (i = 0; i < len && lines > 0; lines--)
@@ -958,38 +906,38 @@ void UI_DisplayMenu(void)
 		}
 
 		// channel number
-		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 0, 8);
+		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 2, 8);
 
 		SETTINGS_FetchChannelName(String, gSubMenuSelection);
 		pPrintStr = String[0] ? String : "--";
 
 		// channel name and scan-list
 		if (gSubMenuSelection < 0 || !gEeprom.SCAN_LIST_ENABLED[i]) {
-			UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 2, 8);
+			UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
 		} else {
-			UI_PrintStringSmallNormal(pPrintStr, menu_item_x1, menu_item_x2, 2);
+			UI_PrintStringSmallNormal(pPrintStr, menu_item_x1, menu_item_x2, 4);
 
 			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
 				sprintf(String, "PRI%d:%u", 1, gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
+				UI_PrintString(String, menu_item_x1, menu_item_x2, 5, 8);
 			}
 
 			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
 				sprintf(String, "PRI%d:%u", 2, gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 5, 8);
+				UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
 			}
 		}
 	}
 
 	if ((UI_MENU_GetCurrentMenuId() == MENU_R_CTCS || UI_MENU_GetCurrentMenuId() == MENU_R_DCS) && gCssBackgroundScan)
-		UI_PrintString("SCAN", menu_item_x1, menu_item_x2, 4, 8);
+		UI_PrintString("SCAN", menu_item_x1, menu_item_x2, 5, 8);
 
 #ifdef ENABLE_DTMF_CALLING
 	if (UI_MENU_GetCurrentMenuId() == MENU_D_LIST && gIsDtmfContactValid) {
 		Contact[11] = 0;
 		memcpy(&gDTMF_ID, Contact + 8, 4);
 		sprintf(String, "ID:%4s", gDTMF_ID);
-		UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
+		UI_PrintString(String, menu_item_x1, menu_item_x2, 5, 8);
 	}
 #endif
 
@@ -1002,16 +950,24 @@ void UI_DisplayMenu(void)
 #endif
 	) {
 		sprintf(String, "%2d", gSubMenuSelection);
-		UI_PrintStringSmallNormal(String, 105, 0, 0);
+		UI_PrintStringSmallNormal(String, LCD_WIDTH - 14, 0, 0);
 	}
 
 	if ((UI_MENU_GetCurrentMenuId() == MENU_RESET    ||
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_CH   ||
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME ||
 	     UI_MENU_GetCurrentMenuId() == MENU_DEL_CH) && gAskForConfirmation)
-	{	// display confirmation
+	{	// display confirmation in value area center
 		char *pPrintStr = (gAskForConfirmation == 1) ? "SURE?" : "WAIT!";
-		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 5, 8);
+		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 3, 8);
+	}
+
+	// Edit mode indicator: invert the entire value area (pages 2-7) when in submenu
+	if (gIsInSubMenu)
+	{
+		for (i = 2; i < 8; i++)
+			for (unsigned int col = 0; col < LCD_WIDTH; col++)
+				gFrameBuffer[i][col] ^= 0xFF;
 	}
 
 	ST7565_BlitFullScreen();
