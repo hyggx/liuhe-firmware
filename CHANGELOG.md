@@ -9,6 +9,22 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Fixed — FM radio audio pop/crack on channel switch (2026-05-18, `main`)
+
+- **`audio.c` `AUDIO_PlayBeep` — BK1080 unmute sequencing corrected** —
+  After each key-beep in FM radio mode a loud pop/crack was audible,
+  independent of the volume knob. Root cause: BK1080's audio output feeds
+  the speaker amplifier directly, bypassing BK4819's volume control; the
+  prior code turned the amplifier on first and unmuted BK1080 second, so
+  the amp opened onto an unstable (transitioning) analog signal and the
+  transient was amplified at full hardware level.
+  Fix: in FM mode the sequence is now **mute → beep → BK1080_Mute(false)
+  (amp still off) → 20 ms settle → AudioPathOn**, ensuring the amplifier
+  always opens onto a clean, stable signal. Non-FM code path unchanged.
+  Also: `app/fm.c` `Key_UP_DOWN` mutes BK1080 and turns off the audio path
+  before calling `BK1080_SetFrequency`, preventing PLL-relock noise from
+  reaching the speaker during channel hops.
+
 ### UI — Settings menu overhaul (2026-05-18, `main`)
 
 Flash budget: `text 59 912 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).

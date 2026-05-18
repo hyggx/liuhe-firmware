@@ -57,6 +57,8 @@ void AUDIO_PlayBeep(BEEP_Type_t Beep)
 		return;
 
 #ifdef ENABLE_FMRADIO
+	// Mute BK1080 before killing the audio path so its output is silent
+	// while BK4819 takes over for the beep tone.
 	if (gFmRadioMode)
 		BK1080_Mute(true);
 #endif
