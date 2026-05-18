@@ -54,9 +54,9 @@ const t_menu_item MenuList[] =
 	{"Step",   VOICE_ID_FREQUENCY_STEP,                MENU_STEP          },
 	{"TxPwr",  VOICE_ID_POWER,                         MENU_TXP           }, // was "TXP"
 	{"RxDCS",  VOICE_ID_DCS,                           MENU_R_DCS         }, // was "R_DCS"
-	{"RxCTCS", VOICE_ID_CTCSS,                         MENU_R_CTCS        }, // was "R_CTCS"
+	{"RxCTCSS", VOICE_ID_CTCSS,                         MENU_R_CTCS        }, // was "R_CTCS"
 	{"TxDCS",  VOICE_ID_DCS,                           MENU_T_DCS         }, // was "T_DCS"
-	{"TxCTCS", VOICE_ID_CTCSS,                         MENU_T_CTCS        }, // was "T_CTCS"
+	{"TxCTCSS", VOICE_ID_CTCSS,                         MENU_T_CTCS        }, // was "T_CTCS"
 	{"TxODir", VOICE_ID_TX_OFFSET_FREQUENCY_DIRECTION, MENU_SFT_D         }, // was "SFT_D"
 	{"TxOffs", VOICE_ID_TX_OFFSET_FREQUENCY,           MENU_OFFSET        }, // was "OFFSET"
 	{"W/N",    VOICE_ID_CHANNEL_BANDWIDTH,             MENU_W_N           },
@@ -481,7 +481,7 @@ void UI_DisplayMenu(void)
 		}
 
 		case MENU_TXP: {
-			static const char * const txp_watts[] = {"~0.5W", "~2W", "~5W"};
+			static const char * const txp_watts[] = {"0.5W", "2W", "5W"};
 			sprintf(String, "%s\n%s", SUBV(gSubMenu_TXP[gSubMenuSelection], gSubMenu_TXP_CN[gSubMenuSelection]), txp_watts[gSubMenuSelection]);
 			break;
 		}
@@ -962,10 +962,9 @@ void UI_DisplayMenu(void)
 		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
 	}
 
-	// Edit mode indicator: right-arrow at right side of page 2 (avoids overlapping centered text)
+	// Edit mode indicator: '>' character at right side of page 2
 	if (gIsInSubMenu)
-		memcpy(gFrameBuffer[2] + (LCD_WIDTH - sizeof(BITMAP_CurrentIndicator)),
-		       BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
+		UI_PrintStringSmallBold(">", LCD_WIDTH - 8, 0, 2);
 
 	ST7565_BlitFullScreen();
 }

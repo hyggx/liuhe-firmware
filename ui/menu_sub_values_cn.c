@@ -92,11 +92,11 @@ const char gSubMenu_SC_REV_CN[3][CN_MAX] = {
 
 /* ---- Channel display mode ---- */
 /* 频率  信道号  名称  名+频 */
-const char gSubMenu_MDF_CN[4][10] = {
-    "\xe9\xa2\x91\xe7\x8e\x87",            /* 频率   */
-    "\xe4\xbf\xa1\xe9\x81\x93\xe5\x8f\xb7", /* 信道号 */
-    "\xe5\x90\x8d\xe7\xa7\xb0",            /* 名称   */
-    "\xe5\x90\x8d+\xe9\xa2\x91",           /* 名+频  */
+const char gSubMenu_MDF_CN[4][16] = {
+    "\xe9\xa2\x91\xe7\x8e\x87",                              /* 频率     */
+    "\xe4\xbf\xa1\xe9\x81\x93\xe5\x8f\xb7",                  /* 信道号   */
+    "\xe5\x90\x8d\xe7\xa7\xb0",                              /* 名称     */
+    "\xe5\x90\x8d\xe7\xa7\xb0\x2b\xe9\xa2\x91\xe7\x8e\x87", /* 名称+频率 */
 };
 
 /* ---- Power-on message ---- */

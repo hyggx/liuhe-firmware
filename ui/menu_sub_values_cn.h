@@ -28,7 +28,7 @@ extern const char gSubMenu_SAVE_CN[5][CN_MAX];
 extern const char gSubMenu_TOT_CN[11][CN_MAX];
 extern const char gSubMenu_RXMode_CN[4][10];
 extern const char gSubMenu_SC_REV_CN[3][CN_MAX];
-extern const char gSubMenu_MDF_CN[4][10];
+extern const char gSubMenu_MDF_CN[4][16];
 extern const char gSubMenu_PONMSG_CN[4][CN_MAX];
 extern const char gSubMenu_ROGER_CN[3][CN_MAX];
 extern const char gSubMenu_RESET_CN[2][CN_MAX];

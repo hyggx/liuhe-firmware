@@ -24,7 +24,7 @@
 #include "settings.h"
 
 typedef struct {
-	const char  name[7];    // menu display area only has room for 6 characters
+	const char  name[9];    // menu item EN name (displayed in EN mode, max 8 chars)
 	VOICE_ID_t  voice_id;
 	uint8_t     menu_id;
 } t_menu_item;
