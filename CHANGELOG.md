@@ -234,6 +234,45 @@ was measured with `ENABLE_FMRADIO=1`; current config (`FMRADIO=0`) measures
   Corrected to `raw 130 → −95 dBm`, which matches the AM Fix AGC target and is
   easily verified: `130 × 0.5 − 160 = −95 dBm`.
 
+### Scanner — Priority-channel insertion rate reduced (commit: `f26854a`)
+
+- **[fix] `app/chFrScanner.c` — `SCAN_PRIORITY_INTERVAL`** —
+  Priority-channel check was inserted after every scanned channel
+  (`SCAN_PRIORITY_INTERVAL = 1`).  On a busy band this caused the
+  scanner to stall on the priority channel entry for every step, making
+  forward progress nearly imperceptible.  Changed to
+  `SCAN_PRIORITY_INTERVAL = 8`: the priority check fires once every
+  8 scanned channels, reducing interruptions by 87.5 % while still
+  giving the priority channel roughly one check per second at normal
+  scan speeds.
+
+### Fixed — 6.25 kHz bandwidth exposed in W_N menu + weak-signal filter bug (commit: `3402875`)
+
+Flash budget (2026-05-18 measured):
+`text 59 000 B / 61 440 B` — **2 440 B free**.
+
+- **[fix] `ui/menu.c` / `ui/menu.h` — `gSubMenu_W_N` missing NARROWER entry** —
+  The `BK4819_FILTER_BW_NARROWER` (6.25 kHz) enum value was already
+  handled in `bk4819.c` and used in `app/spectrum.c`, but the W_N menu
+  array was declared as `[2][7]` and contained only `{"WIDE", "NARROW"}`.
+  Any code that wrote `NARROWER` to EEPROM would read back a display of
+  `WIDE` (index 0 wrap), silently discarding the user's choice.
+  Fix: array extended to `[3][7]`; third entry added as `"NARRW"` (truncated
+  to fit the 6-character field width).  Users can now select 6.25 kHz via
+  the menu; value is stored and restored correctly across power cycles.
+
+- **[P2] `driver/bk4819.c` `BK4819_SetFilterBandwidth` NARROWER weak-signal path** —
+  In the `BK4819_FILTER_BW_NARROWER` case, the `val` initialiser included
+  `(3u << 9)` unconditionally.  The `if (weak_no_different)` branch then
+  OR'd `(3u << 9)` again (no-op), and the `else` branch OR'd `(0u << 9)`
+  (also a no-op).  Both paths therefore produced the identical register
+  value `0x3658`, making the "weak signal" variant of NARROWER identical
+  to the normal variant — the bits[11:9] field was never cleared.
+  Fix: `(3u << 9)` removed from the initialiser; the strong-signal path
+  OR's it in to produce `0x3658`; the weak-signal path leaves bits[11:9]
+  at zero, producing `0x3058` — the correct lower-bandwidth setting for
+  weak-signal AM reception.
+
 ### Deferred — requires design / more analysis
 
 - `app/dtmf.c` `DTMF_FindContact` — unbounded `pResult` write; all current callers
