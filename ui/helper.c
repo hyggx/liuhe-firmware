@@ -286,7 +286,7 @@ void UI_DisplayClear()
 
 /* Use the canonical constant from driver/eeprom.h */
 #define EEPROM_CJK_FONT_BASE   EEPROM_FONT_BASE
-#define CJK_GLYPH_WIDTH        12u
+#define CJK_GLYPH_WIDTH        13u
 #define CJK_BYTES_PER_GLYPH    (CJK_GLYPH_WIDTH * 2u)
 #define ASCII_GLYPH_WIDTH      8u   /* gFontBig renders into 8 columns (7 data + 1 spacer) */
 
@@ -357,7 +357,8 @@ static void cjk_render_glyph(uint8_t col, uint8_t line, uint16_t glyph_data_addr
 
 /* Public: Render a UTF-8 string (ASCII + CJK) into the framebuffer.
  * When the UI language is not CN, falls back to the standard ASCII renderer
- * (UI_PrintString) which handles Start/End centering correctly. */
+ * (UI_PrintString) which handles Start/End centering correctly.
+ * In CN mode, supports centering when End > Start. */
 void UI_PrintStringMixed(const char *pString, uint8_t Start, uint8_t End, uint8_t Line)
 {
 	if (gUiLanguage != UI_LANGUAGE_CN) {
@@ -396,9 +397,24 @@ void UI_PrintStringMixed(const char *pString, uint8_t Start, uint8_t End, uint8_
 		glyph_data_base = index_base + ((idx_size + 7u) & ~7u);
 	}
 
-	/* Single pass: render left-aligned from Start (End unused; kept for API compat) */
-	(void)End;
+	/* Pre-pass: measure total pixel width for centering within Start..End. */
 	uint8_t x = Start;
+	if (End > Start) {
+		uint16_t total_w = 0;
+		const char *q = pString;
+		while (*q) {
+			uint32_t cp = utf8_next(&q);
+			if (cp >= 0x4E00u && cp <= 0x9FFFu)
+				total_w += CJK_GLYPH_WIDTH;
+			else
+				total_w += ASCII_GLYPH_WIDTH; /* ASCII, space, or unknown */
+		}
+		const uint16_t span = (uint16_t)(End - Start);
+		if (total_w < span)
+			x = (uint8_t)(Start + (span - total_w) / 2u);
+	}
+
+	/* Render pass: from computed x offset. */
 	const char *p = pString;
 	while (*p && x < 128u) {
 		uint32_t cp = utf8_next(&p);

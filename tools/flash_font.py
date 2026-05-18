@@ -105,32 +105,40 @@ def _build_frame(cmd_id: int, inner_data: bytes, encrypted: bool = False) -> byt
 
 
 def _parse_reply(raw: bytes, expected_id: int, encrypted: bool = False) -> bytes:
-    """Validate a radio-to-host reply frame; return inner payload bytes."""
+    """Validate a radio-to-host reply frame; return inner payload bytes.
+
+    Reply frame layout (radio → host):
+        0xABCD        uint16_t LE  outer start marker  (Header.ID = 0xCDAB stored LE)
+        Size          uint16_t LE  total payload size  (= 4 + inner_size)
+        reply_id      uint16_t LE  reply command ID    (e.g. 0x0515)
+        inner_size    uint16_t LE  inner payload bytes
+        inner_data    inner_size B
+        0xFF 0xFF                  padding (Obfuscation-derived when encrypted)
+        0xDCBA        uint16_t LE  outer end marker
+
+    Note: reply frames have NO CRC field (unlike host→radio request frames).
+    """
     idx = raw.find(b"\xab\xcd")
     if idx < 0:
         raise ValueError("No 0xABCD start marker in reply")
     idx += 2
     if idx + 2 > len(raw):
-        raise ValueError("Reply too short (no outer-size field)")
-    outer_size = struct.unpack_from("<H", raw, idx)[0]
-    idx += 2  # now pointing at the inner ID field
-    full = raw[idx : idx + outer_size + 2]
-    if len(full) < outer_size + 2:
-        raise ValueError(f"Reply truncated ({len(full)} B, need {outer_size + 2} B)")
+        raise ValueError("Reply too short (no size field)")
+    size = struct.unpack_from("<H", raw, idx)[0]
+    idx += 2  # now pointing at reply_id
+    data = raw[idx : idx + size]
+    if len(data) < size:
+        raise ValueError(f"Reply truncated ({len(data)} B, need {size} B)")
     if encrypted:
-        full = bytes(b ^ _OBFUSCATION[i % 16] for i, b in enumerate(full))
-    crc_computed = _crc16(full[:outer_size])
-    crc_received = struct.unpack_from("<H", full, outer_size)[0]
-    if crc_computed != crc_received:
-        raise ValueError(
-            f"CRC mismatch: computed {crc_computed:#06x}, received {crc_received:#06x}"
-        )
-    reply_id, inner_size = struct.unpack_from("<HH", full, 0)
+        data = bytes(b ^ _OBFUSCATION[i % 16] for i, b in enumerate(data))
+    if size < 4:
+        raise ValueError(f"Reply data too short ({size} B) to contain header")
+    reply_id, inner_size = struct.unpack_from("<HH", data, 0)
     if reply_id != expected_id:
         raise ValueError(
             f"Unexpected reply ID {reply_id:#06x} (expected {expected_id:#06x})"
         )
-    return full[4 : 4 + inner_size]
+    return data[4 : 4 + inner_size]
 
 
 def _send_recv(
