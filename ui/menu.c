@@ -962,9 +962,9 @@ void UI_DisplayMenu(void)
 		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
 	}
 
-	// Edit mode indicator: '>' character at right side of page 2
+	// Edit mode indicator: big '>' at right side of value area (pages 2-3)
 	if (gIsInSubMenu)
-		UI_PrintStringSmallBold(">", LCD_WIDTH - 8, 0, 2);
+		UI_PrintString(">", LCD_WIDTH - 8, 0, 2, 8);
 
 	ST7565_BlitFullScreen();
 }
