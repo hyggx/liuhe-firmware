@@ -604,23 +604,30 @@ void UI_DisplayMenu(void)
 		{
 			const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
 
+			// Line 1: channel number (pages 2-3)
 			UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
 			UI_PrintString(String, menu_item_x1, menu_item_x2, 2, 8);
 
-			if (valid && !gAskForConfirmation)
-			{	// show the frequency so that the user knows the channels frequency
-				const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
-				#ifdef ENABLE_CHINESE
-				if (gUiLanguage == UI_LANGUAGE_CN)
-					sprintf(String, "%u.%04u", frequency / 100000, (frequency % 100000) / 10);
-				else
-				#endif
-					sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
-			}
+			if (!gAskForConfirmation)
+			{
+				// Line 2: channel name (pages 4-5)
+				SETTINGS_FetchChannelName(String, gSubMenuSelection);
+				UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 4, 8);
 
-			SETTINGS_FetchChannelName(String, gSubMenuSelection);
-			UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 4, 8);
+				// Line 3: frequency small font (page 6 only — avoids page-7 cutoff)
+				if (valid)
+				{
+					const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
+					#ifdef ENABLE_CHINESE
+					if (gUiLanguage == UI_LANGUAGE_CN)
+						sprintf(String, "%u.%04u MHz", frequency / 100000, (frequency % 100000) / 10);
+					else
+					#endif
+						sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
+					UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
+				}
+			}
+			// When gAskForConfirmation: only CH# shown; SURE?/WAIT! drawn below
 			already_printed = true;
 			break;
 		}
@@ -629,23 +636,24 @@ void UI_DisplayMenu(void)
 		{
 			const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
 
+			// Line 1: channel number (pages 2-3)
 			UI_GenerateChannelStringEx(String, valid, gSubMenuSelection);
 			UI_PrintString(String, menu_item_x1, menu_item_x2, 2, 8);
 
-			if (valid)
+			if (valid && !gAskForConfirmation)
 			{
 				const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
 
+				// Line 2: channel name or edit buffer (pages 4-5)
 				if (!gIsInSubMenu || edit_index < 0)
-				{	// show the channel name (browse mode)
+				{
 					SETTINGS_FetchChannelName(String, gSubMenuSelection);
-					char *pPrintStr = String[0] ? String : "--";
-					UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
+					UI_PrintString(String[0] ? String : "--", menu_item_x1, menu_item_x2, 4, 8);
 				}
 				else
-				{	// show the channel name being edited (edit mode)
+				{
 					UI_PrintString(edit, menu_item_x1, 0, 4, 8);
-					// Underline cursor: 1px at bottom of page 5 at the cursor character column
+					// Underline cursor: 1px at bottom of page 5
 					if (edit_index < 10)
 					{
 						const uint8_t cx = (uint8_t)(edit_index * 8);
@@ -654,17 +662,16 @@ void UI_DisplayMenu(void)
 					}
 				}
 
-				if (!gAskForConfirmation)
-				{	// show the frequency
-					#ifdef ENABLE_CHINESE
-					if (gUiLanguage == UI_LANGUAGE_CN)
-						sprintf(String, "%u.%04u", frequency / 100000, (frequency % 100000) / 10);
-					else
-					#endif
-						sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
-					UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
-				}
+				// Line 3: frequency small font (page 6 only)
+				#ifdef ENABLE_CHINESE
+				if (gUiLanguage == UI_LANGUAGE_CN)
+					sprintf(String, "%u.%04u MHz", frequency / 100000, (frequency % 100000) / 10);
+				else
+				#endif
+					sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
+				UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
 			}
+			// When gAskForConfirmation: only CH# shown; SURE?/WAIT! drawn below
 
 			already_printed = true;
 			break;
@@ -951,14 +958,15 @@ void UI_DisplayMenu(void)
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_CH   ||
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME ||
 	     UI_MENU_GetCurrentMenuId() == MENU_DEL_CH) && gAskForConfirmation)
-	{	// display confirmation below channel content (pages 6-7)
+	{	// display confirmation in name slot (pages 4-5), visible above page-7 cutoff
 		char *pPrintStr = (gAskForConfirmation == 1) ? "SURE?" : "WAIT!";
-		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 6, 8);
+		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 4, 8);
 	}
 
-	// Edit mode indicator: small right-arrow at top-left of value area
+	// Edit mode indicator: right-arrow at right side of page 2 (avoids overlapping centered text)
 	if (gIsInSubMenu)
-		memcpy(gFrameBuffer[2], BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
+		memcpy(gFrameBuffer[2] + (LCD_WIDTH - sizeof(BITMAP_CurrentIndicator)),
+		       BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
 
 	ST7565_BlitFullScreen();
 }
