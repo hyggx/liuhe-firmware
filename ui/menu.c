@@ -516,9 +516,11 @@ void UI_DisplayMenu(void)
 			break;
 		}
 
-		case MENU_TXP:
-			strcpy(String, gSubMenu_TXP[gSubMenuSelection]);
+		case MENU_TXP: {
+			static const char * const txp_watts[] = {"~0.5W", "~2W", "~5W"};
+			sprintf(String, "%s\n%s", gSubMenu_TXP[gSubMenuSelection], txp_watts[gSubMenuSelection]);
 			break;
+		}
 
 		case MENU_R_DCS:
 		case MENU_T_DCS:
