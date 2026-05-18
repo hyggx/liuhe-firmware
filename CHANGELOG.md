@@ -9,56 +9,62 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
-### UI — 设置菜单全面优化 (2026-05-18, `main`)
+### UI — Settings menu overhaul (2026-05-18, `main`)
 
 Flash budget: `text 59 912 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
-- **`ui/menu.c` — 上下布局代替左右双栏** —
-  原版左侧显示设置名、右侧显示值的双栏布局改为上下结构：标题栏（pages 0-1）
-  显示设置名称（大字），下方值区（pages 2-7）居中显示设置内容。消除中文名称
-  右侧出界、设置值截断等问题。
+- **`ui/menu.c` — top-bottom layout replaces two-column design** —
+  The original left-name / right-value two-column layout is replaced by a
+  top-bottom design: title bar (pages 0–1) shows the setting name in large
+  font; value area (pages 2–7) shows the current value centred below.
+  Eliminates Chinese label overflow and value truncation on the right edge.
 
-- **`ui/menu.c` — 标题栏布局：左名右计数** —
-  设置名称左对齐，`N/Total` 计数器右对齐，两者同在 page 0 行，page 1 底部
-  保留点状分隔线。避免计数器与分隔线重叠导致的字符越界问题。
+- **`ui/menu.c` — title bar: name left, counter top-right** —
+  Setting name is left-aligned; the `N/Total` index counter is right-aligned;
+  both share page 0.  Page 1 retains the dotted separator line at its bottom
+  pixel.  Prevents the counter from crossing the separator line and appearing
+  on the wrong page.
 
-- **`ui/menu.c` / `ui/helper.c` — 中文内容居中显示** —
-  `UI_PrintStringMixed` 新增预测量 pass：先扫描字符串计算总像素宽
-  （CJK=13 px，ASCII=8 px），再相对 `Start..End` 计算居中偏移，使中文
-  设置名称和设置值均居中，与英文模式行为一致。
+- **`ui/menu.c` / `ui/helper.c` — CJK text centring in `UI_PrintStringMixed`** —
+  Added a measurement pre-pass that computes the total pixel width of a
+  mixed CJK/ASCII string (CJK = 13 px, ASCII = 8 px) and derives a centred
+  start offset within `Start..End`.  Previously the `End` parameter was
+  silently ignored in CN mode, causing all titles and values to be
+  left-aligned.
 
-- **`ui/menu.c` — 编辑指示符改为 `>`** —
-  原实心箭头 Bitmap 改为大字体 `>` 字符，显示于值区右侧（page 2-3 右边），
-  更清晰且不遮挡内容。
+- **`ui/menu.c` — edit indicator changed to `>`** —
+  Replaced the filled solid-arrow bitmap (`BITMAP_CurrentIndicator`) with a
+  plain `>` character rendered using the large font, shown at the right side
+  of the value area (pages 2–3).  Clearer and does not obscure content.
 
-- **`ui/menu.c` — 功率值去掉 `~` 前缀** —
-  `~0.5W / ~2W / ~5W` → `0.5W / 2W / 5W`。
+- **`ui/menu.c` — power values: remove `~` approximation prefix** —
+  `~0.5W / ~2W / ~5W` → `0.5W / 2W / 5W`.
 
-- **`ui/menu.c` / `ui/menu_lang.c` — CTCS → CTCSS（正确全称）** —
-  英文菜单名 `RxCTCS/TxCTCS` → `RxCTCSS/TxCTCSS`；
-  中文 `接收CTCS/发射CTCS` → `接收CTCSS/发射CTCSS`。
-  `t_menu_item.name[]` 数组从 7 字节扩展到 9 字节以容纳更长名称。
+- **`ui/menu.c` / `ui/menu_lang.c` — CTCS → CTCSS (correct abbreviation)** —
+  EN menu names `RxCTCS / TxCTCS` → `RxCTCSS / TxCTCSS`;
+  CN labels updated to match.
+  `t_menu_item.name[]` widened from 7 to 9 bytes to accommodate longer names.
 
-- **`ui/menu_lang.c` — 中文菜单名优化** —
+- **`ui/menu_lang.c` — Chinese menu label improvements** —
 
-  | 原文 | 新文 |
-  |------|------|
-  | 存信道 | 保存信道 |
-  | 删信道 | 删除信道 |
-  | 命名信道 | 命名信道（不变） |
-  | 信道显示 → 名+频 | 信道显示 → 名称+频率 |
-  | 静噪 | 静噪 |
-  | 显示语言 | 语言 |
-  | 偏移向 | 频差方向 |
-  | 偏移频 | 频差频率 |
-  | 忙锁 | 繁忙锁定 |
-  | 省电 | 省电模式 |
+  | Before | After |
+  |--------|-------|
+  | 存信道 (save ch.) | 保存信道 (save channel) |
+  | 删信道 (del ch.) | 删除信道 (delete channel) |
+  | 名+频 (name+freq) | 名称+频率 (name+frequency) |
+  | 显示语言 (display language) | 语言 (language) |
+  | 偏移向 (offset dir.) | 频差方向 (freq. offset direction) |
+  | 偏移频 (offset freq.) | 频差频率 (freq. offset) |
+  | 忙锁 (busy lock) | 繁忙锁定 (busy lockout) |
+  | 省电 (power save) | 省电模式 (power-save mode) |
 
-- **`tools/gen_cjk_font.py` / `tools/cjk_font.bin` — 字体扩充至 143 字** —
-  新增"保"、"除"等菜单所需汉字；字体二进制重新生成（4 014 字节，26 bytes/glyph）。
+- **`tools/gen_cjk_font.py` / `tools/cjk_font.bin` — font expanded to 143 glyphs** —
+  Added glyphs required by updated menu labels (e.g. 保, 除, 率, 名称, …);
+  binary regenerated: 4 014 bytes, 26 bytes/glyph.
 
-- **`ui/menu.c` — 3-4 行内容项不再溢出** —
-  存/删/命名信道、按键即呼等多行内容项通过缩小行距、调整起始行号适配 pages 2-7。
+- **`ui/menu.c` — 3–4 line menu items no longer overflow** —
+  Multi-line items (save/delete/name channel, PTT-ID) now fit within
+  pages 2–7 by reducing line spacing and adjusting the starting page.
 
 ### Chinese localisation — language audit fixes (branch: `main`)
 
