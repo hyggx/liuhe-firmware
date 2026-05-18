@@ -430,13 +430,13 @@ void UI_DisplayMenu(void)
 		if (menu_index >= 0 && menu_index < (int)gMenuListCount)
 			SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, LCD_WIDTH, 0);
 
-		// Index counter: "N/Total" small, right-aligned at page 0
+		// Index counter: "N/Total" small, right-aligned at page 1 (below big-font
+		// title rows 0-7, no pixel overlap with centered title text)
 		sprintf(String, "%u/%u", 1 + gMenuCursor, gMenuListCount);
 		{
-			// Right-align: each small char ~7px wide
 			const uint8_t idx_len = (uint8_t)strlen(String);
-			const uint8_t idx_x   = LCD_WIDTH - idx_len * 7;
-			UI_PrintStringSmallNormal(String, idx_x, 0, 0);
+			const uint8_t idx_x   = LCD_WIDTH - idx_len * 6;
+			UI_PrintStringSmallNormal(String, idx_x, 0, 1);
 		}
 
 		// Dotted horizontal separator at bottom pixel of page 1
