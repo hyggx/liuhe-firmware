@@ -152,13 +152,20 @@ void AUDIO_PlayBeep(BEEP_Type_t Beep)
 	SYSTEM_DelayMs(5);
 	BK4819_WriteRegister(BK4819_REG_71, ToneConfig);
 
-	if (gEnableSpeaker)
-		AUDIO_AudioPathOn();
-
 #ifdef ENABLE_FMRADIO
 	if (gFmRadioMode) {
-		SYSTEM_DelayMs(50);  // allow BK1080 PLL to settle after frequency change
+		// Unmute BK1080 while amp is still off, then let the analog output
+		// settle before opening the amp. This prevents the pop/crack caused
+		// by the BK1080 output transitioning while the speaker amp is active.
 		BK1080_Mute(false);
+		SYSTEM_DelayMs(20);
+		if (gEnableSpeaker)
+			AUDIO_AudioPathOn();
+	} else {
+#endif
+	if (gEnableSpeaker)
+		AUDIO_AudioPathOn();
+#ifdef ENABLE_FMRADIO
 	}
 #endif
 
