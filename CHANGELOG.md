@@ -9,6 +9,57 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### UI — 设置菜单全面优化 (2026-05-18, `main`)
+
+Flash budget: `text 59 912 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`ui/menu.c` — 上下布局代替左右双栏** —
+  原版左侧显示设置名、右侧显示值的双栏布局改为上下结构：标题栏（pages 0-1）
+  显示设置名称（大字），下方值区（pages 2-7）居中显示设置内容。消除中文名称
+  右侧出界、设置值截断等问题。
+
+- **`ui/menu.c` — 标题栏布局：左名右计数** —
+  设置名称左对齐，`N/Total` 计数器右对齐，两者同在 page 0 行，page 1 底部
+  保留点状分隔线。避免计数器与分隔线重叠导致的字符越界问题。
+
+- **`ui/menu.c` / `ui/helper.c` — 中文内容居中显示** —
+  `UI_PrintStringMixed` 新增预测量 pass：先扫描字符串计算总像素宽
+  （CJK=13 px，ASCII=8 px），再相对 `Start..End` 计算居中偏移，使中文
+  设置名称和设置值均居中，与英文模式行为一致。
+
+- **`ui/menu.c` — 编辑指示符改为 `>`** —
+  原实心箭头 Bitmap 改为大字体 `>` 字符，显示于值区右侧（page 2-3 右边），
+  更清晰且不遮挡内容。
+
+- **`ui/menu.c` — 功率值去掉 `~` 前缀** —
+  `~0.5W / ~2W / ~5W` → `0.5W / 2W / 5W`。
+
+- **`ui/menu.c` / `ui/menu_lang.c` — CTCS → CTCSS（正确全称）** —
+  英文菜单名 `RxCTCS/TxCTCS` → `RxCTCSS/TxCTCSS`；
+  中文 `接收CTCS/发射CTCS` → `接收CTCSS/发射CTCSS`。
+  `t_menu_item.name[]` 数组从 7 字节扩展到 9 字节以容纳更长名称。
+
+- **`ui/menu_lang.c` — 中文菜单名优化** —
+
+  | 原文 | 新文 |
+  |------|------|
+  | 存信道 | 保存信道 |
+  | 删信道 | 删除信道 |
+  | 命名信道 | 命名信道（不变） |
+  | 信道显示 → 名+频 | 信道显示 → 名称+频率 |
+  | 静噪 | 静噪 |
+  | 显示语言 | 语言 |
+  | 偏移向 | 频差方向 |
+  | 偏移频 | 频差频率 |
+  | 忙锁 | 繁忙锁定 |
+  | 省电 | 省电模式 |
+
+- **`tools/gen_cjk_font.py` / `tools/cjk_font.bin` — 字体扩充至 143 字** —
+  新增"保"、"除"等菜单所需汉字；字体二进制重新生成（4 014 字节，26 bytes/glyph）。
+
+- **`ui/menu.c` — 3-4 行内容项不再溢出** —
+  存/删/命名信道、按键即呼等多行内容项通过缩小行距、调整起始行号适配 pages 2-7。
+
 ### Chinese localisation — language audit fixes (branch: `main`)
 
 Flash budget (2026-05-18, `ENABLE_CHINESE=1`, default config):
