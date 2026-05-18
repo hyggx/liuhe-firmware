@@ -511,6 +511,9 @@ static void Key_UP_DOWN(uint8_t state, int8_t Step)
 	gRequestSaveFM = true;
 
 Bail:
+	// Mute before retuning to suppress PLL transition noise
+	BK1080_Mute(true);
+	AUDIO_AudioPathOff();
 	BK1080_SetFrequency(gEeprom.FM_FrequencyPlaying, gEeprom.FM_Band/*, gEeprom.FM_Space*/);
 
 	gRequestDisplayScreen = DISPLAY_FM;

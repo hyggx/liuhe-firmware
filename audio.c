@@ -156,8 +156,10 @@ void AUDIO_PlayBeep(BEEP_Type_t Beep)
 		AUDIO_AudioPathOn();
 
 #ifdef ENABLE_FMRADIO
-	if (gFmRadioMode)
+	if (gFmRadioMode) {
+		SYSTEM_DelayMs(50);  // allow BK1080 PLL to settle after frequency change
 		BK1080_Mute(false);
+	}
 #endif
 
 	if (gCurrentFunction == FUNCTION_POWER_SAVE && gRxIdleMode)
