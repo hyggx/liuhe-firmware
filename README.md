@@ -26,23 +26,17 @@ Custom firmware for the **Quansheng UV-K6 V1** (DP32G030 / ARM Cortex-M0), forke
 
 ## Project Status
 
-See [CHANGELOG.md](./CHANGELOG.md) for detailed progress.
-
-| Phase   | Description                    | Status      |
-| ------- | ------------------------------ | ----------- |
-| Phase 0 | Baseline build verification    | Done        |
-| Phase 1 | P0 security hardening          | In progress |
-| Phase 2 | Regression test suite          | Planned     |
-| Phase 3 | Ham-core features for UV-K6 V1 | Planned     |
+Current release: **v0.1.0** (2026-05-18).  
+See [CHANGELOG.md](./CHANGELOG.md) for the full change history.
 
 ## Features
 
-All features from egzumer v0.22 baseline are preserved:
+Most features from egzumer v0.22 baseline are preserved:
 
 - **Spectrum analyzer** (`F` + `5`) - fagci implementation
 - **AM fix** - dynamic front-end gain control (OneOfEleven)
 - **FM radio** - WBFM VHF broadcast receiver
-- **DTMF calling** - contacts, group calls, ANI
+- **DTMF calling** - contacts, group calls, ANI *(disabled by default in this fork — reclaims ~3 KB flash)*
 - **Configurable buttons** - long-press assignments from menu
 - **RSSI / audio bar** - dBm S-meter and TX audio level
 - **Fast scan** - channel and frequency range scanning
@@ -91,24 +85,25 @@ Use the [UV-K5 Web Flasher](https://egzumer.github.io/uvtools) with `firmware.pa
 
 ## Build Options
 
-Edit the `ENABLE_XXX` flags at the top of `Makefile` (`0` = disable, `1` = enable).
+Edit the `ENABLE_XXX` flags at the top of `Makefile` (`0` = disable, `1` = enable),
+or select a build profile with `make PROFILE=release` (default) / `make PROFILE=debug`.
 
-| Option                        | Description                              |
-| ----------------------------- | ---------------------------------------- |
-| `ENABLE_UART`                 | PC configuration via UART - keep enabled |
-| `ENABLE_FMRADIO`              | WBFM broadcast receiver                  |
-| `ENABLE_VOX`                  | Voice-operated TX                        |
-| `ENABLE_DTMF_CALLING`         | DTMF call system                         |
-| `ENABLE_FLASHLIGHT`           | Top LED (on / blink / SOS)               |
-| `ENABLE_SPECTRUM`             | Spectrum analyzer (`F`+`5`)              |
-| `ENABLE_AM_FIX`               | Dynamic AM front-end gain                |
-| `ENABLE_RSSI_BAR`             | dBm/S-meter bar                          |
-| `ENABLE_AUDIO_BAR`            | TX audio level bar                       |
-| `ENABLE_BIG_FREQ`             | Large frequency font                     |
-| `ENABLE_WIDE_RX`              | 18 MHz - 1300 MHz RX range               |
-| `ENABLE_SCAN_RANGES`          | Frequency range scan mode                |
-| `ENABLE_NO_CODE_SCAN_TIMEOUT` | Disable 32s CTCSS/DCS scan timeout       |
-| `ENABLE_LTO`                  | Link-time optimization (reduces size)    |
+| Option                        | Default | Description                              |
+| ----------------------------- | ------- | ---------------------------------------- |
+| `ENABLE_UART`                 | 1       | PC configuration via UART — keep enabled |
+| `ENABLE_FMRADIO`              | 1       | WBFM broadcast receiver                  |
+| `ENABLE_VOX`                  | 1       | Voice-operated TX                        |
+| `ENABLE_DTMF_CALLING`         | **0**   | DTMF call system (disabled to fit flash) |
+| `ENABLE_FLASHLIGHT`           | 1       | Top LED (on / blink / SOS)               |
+| `ENABLE_SPECTRUM`             | 1       | Spectrum analyzer (`F`+`5`)              |
+| `ENABLE_AM_FIX`               | 1       | Dynamic AM front-end gain                |
+| `ENABLE_RSSI_BAR`             | 1       | dBm/S-meter bar                          |
+| `ENABLE_AUDIO_BAR`            | 1       | TX audio level bar                       |
+| `ENABLE_BIG_FREQ`             | 1       | Large frequency font                     |
+| `ENABLE_WIDE_RX`              | 1       | 18 MHz – 1300 MHz RX range               |
+| `ENABLE_SCAN_RANGES`          | 1       | Frequency range scan mode                |
+| `ENABLE_NO_CODE_SCAN_TIMEOUT` | 1       | Disable 32s CTCSS/DCS scan timeout       |
+| `ENABLE_LTO`                  | 1       | Link-time optimization (reduces size)    |
 
 Full list: see comments in [Makefile](./Makefile).
 
@@ -123,18 +118,18 @@ uv-k6-dp32-firmware/
 +-- external/     CMSIS_5 (Cortex-M CMSIS), printf
 +-- bsp/          Board support (DP32G030 register map)
 +-- Makefile      Build system with ENABLE_XXX feature flags
-+-- firmware.ld   Linker script (512 KB Flash, 16 KB RAM)
++-- firmware.ld   Linker script (64 KB internal Flash / 60 KB usable, 16 KB RAM)
 +-- fw-pack.py    CRC packing for flashable .packed.bin
 ```
 
 ## Branch Structure
 
-| Branch                 | Purpose                                     |
-| ---------------------- | ------------------------------------------- |
-| `main`                 | Mirrors upstream egzumer                    |
-| `vendor/egzumer-v0.22` | Locked upstream baseline (commit `7607f0a`) |
-| `main-dp32-k6`         | Primary development branch                  |
-| `k6-hardening`         | Phase 1 security fixes                      |
+| Branch                 | Purpose                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `main`                 | Primary development and release branch                   |
+| `vendor/egzumer-v0.22` | Locked upstream baseline (commit `7607f0a`)              |
+| `k6-hardening`         | Historical development branch (fully merged into `main`) |
+| `main-dp32-k6`         | Old staging branch (superseded)                          |
 
 ## Credits
 
