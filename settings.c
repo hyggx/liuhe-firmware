@@ -38,6 +38,10 @@ static const uint32_t gDefaultFrequencyTable[] =
 
 EEPROM_Config_t gEeprom = { 0 };
 
+#ifdef ENABLE_CHINESE
+	uint8_t gUiLanguage = UI_LANGUAGE_EN;
+#endif
+
 void SETTINGS_InitEEPROM(void)
 {
 	uint8_t Data[16] = {0};
@@ -334,6 +338,14 @@ void SETTINGS_LoadCalibration(void)
 		BK4819_WriteRegister(BK4819_REG_3B, 22656 + gEeprom.BK4819_XTAL_FREQ_LOW);
 //		BK4819_WriteRegister(BK4819_REG_3C, gEeprom.BK4819_XTAL_FREQ_HIGH);
 	}
+
+#ifdef ENABLE_CHINESE
+	{
+		uint8_t langBuf[8];
+		EEPROM_ReadBuffer(0x1FF8, langBuf, 8);
+		gUiLanguage = (langBuf[0] < 2) ? langBuf[0] : UI_LANGUAGE_EN;
+	}
+#endif
 }
 
 uint32_t SETTINGS_FetchChannelFrequency(const int channel)
@@ -595,6 +607,16 @@ void SETTINGS_SaveSettings(void)
 
 	EEPROM_WriteBuffer(0x0F40, State);
 }
+
+#ifdef ENABLE_CHINESE
+void SETTINGS_SaveLanguage(void)
+{
+	uint8_t State[8];
+	memset(State, 0xFF, sizeof(State));
+	State[0] = gUiLanguage;
+	EEPROM_WriteBuffer(0x1FF8, State);
+}
+#endif
 
 void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, uint8_t Mode)
 {

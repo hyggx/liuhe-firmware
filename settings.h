@@ -256,6 +256,15 @@ typedef struct {
 
 extern EEPROM_Config_t gEeprom;
 
+#ifdef ENABLE_CHINESE
+	#define UI_LANGUAGE_EN   0
+	#define UI_LANGUAGE_CN   1
+	#define SUBV(en, cn)     ((gUiLanguage == UI_LANGUAGE_CN) ? (cn) : (en))
+	extern uint8_t gUiLanguage;
+#else
+	#define SUBV(en, cn)     (en)
+#endif
+
 void     SETTINGS_InitEEPROM(void);
 void     SETTINGS_LoadCalibration(void);
 uint32_t SETTINGS_FetchChannelFrequency(const int channel);
@@ -271,5 +280,8 @@ void SETTINGS_SaveChannel(uint8_t Channel, uint8_t VFO, const VFO_Info_t *pVFO, 
 void SETTINGS_SaveBatteryCalibration(const uint16_t * batteryCalibration);
 void SETTINGS_UpdateChannel(uint8_t channel, const VFO_Info_t *pVFO, bool keep);
 void SETTINGS_WriteBuildOptions(void);
+#ifdef ENABLE_CHINESE
+	void SETTINGS_SaveLanguage(void);
+#endif
 
 #endif

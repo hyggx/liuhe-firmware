@@ -268,6 +268,12 @@ static void CMD_051B(const uint8_t *pBuffer)
 	if (pCmd->Size > sizeof(Reply.Data.Data))
 		return;
 
+	/* Verify the read range stays within the AT24C512 (64 KB).  Without this,
+	 * Offset near 0xFFFF would cause the I2C sequential read to wrap around to
+	 * address 0x0000 and return unintended EEPROM data. */
+	if ((uint32_t)pCmd->Offset + pCmd->Size > EEPROM_SIZE)
+		return;
+
 	gSerialConfigCountDown_500ms = 12; // 6 sec
 
 	#ifdef ENABLE_FMRADIO
@@ -314,10 +320,11 @@ static void CMD_051D(const uint8_t *pBuffer)
 
 	bIsLocked = bHasCustomAesKey ? gIsLocked : bHasCustomAesKey;
 
-	/* [hyggx fix] Verify the entire write range lies within the 8 KB EEPROM.
-	 * Without this, an adversary can supply a large Offset that causes writes
-	 * to walk past address 0x2000 into undefined I2C space. */
-	if ((uint32_t)pCmd->Offset + pCmd->Size > 0x2000u)
+	/* [hyggx fix] Verify the entire write range lies within the 64 KB AT24C512.
+	 * 0x0000-0x1FFF = radio settings; 0x2000-0xFFFF = CJK font region.
+	 * Without this guard an adversary could craft an Offset that wraps the
+	 * 16-bit address space and overwrites arbitrary EEPROM cells. */
+	if ((uint32_t)pCmd->Offset + pCmd->Size > EEPROM_SIZE)
 		return;
 
 	if (!bIsLocked)

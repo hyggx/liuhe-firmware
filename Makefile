@@ -44,6 +44,13 @@ ENABLE_REDUCE_LOW_MID_TX_POWER?= 0
 ENABLE_BYP_RAW_DEMODULATORS   ?= 0
 ENABLE_BLMIN_TMP_OFF          ?= 0
 ENABLE_SCAN_RANGES            ?= 1
+# Requires CJK font binary written to EEPROM 0x2000 (run tools/gen_cjk_font.py first)
+ENABLE_CHINESE                ?= 0
+# CJK renderer adds ~1.4 KB; automatically free budget by disabling some features
+ifeq ($(ENABLE_CHINESE),1)
+ENABLE_FLASHLIGHT             := 0
+ENABLE_VOX                    := 0
+endif
 
 # ---- DEBUGGING ----
 ENABLE_AM_FIX_SHOW_DATA       ?= 0
@@ -96,7 +103,7 @@ ifeq ($(ENABLE_FMRADIO),1)
 	OBJS += driver/bk1080.o
 endif
 OBJS += driver/bk4819.o
-ifeq ($(filter $(ENABLE_AIRCOPY) $(ENABLE_UART),1),1)
+ifeq ($(filter $(ENABLE_AIRCOPY) $(ENABLE_UART) $(ENABLE_CHINESE),1),1)
 	OBJS += driver/crc.o
 endif
 OBJS += driver/eeprom.o
@@ -173,6 +180,10 @@ OBJS += ui/scanner.o
 OBJS += ui/status.o
 OBJS += ui/ui.o
 OBJS += ui/welcome.o
+ifeq ($(ENABLE_CHINESE),1)
+	OBJS += ui/menu_lang.o
+	OBJS += ui/menu_sub_values_cn.o
+endif
 OBJS += version.o
 OBJS += main.o
 
@@ -378,6 +389,9 @@ endif
 ifeq ($(ENABLE_FLASHLIGHT),1)
 	CFLAGS  += -DENABLE_FLASHLIGHT
 endif
+ifeq ($(ENABLE_CHINESE),1)
+	CFLAGS  += -DENABLE_CHINESE
+endif
 ifeq ($(ENABLE_UART_RW_BK_REGS),1)
 	CFLAGS  += -DENABLE_UART_RW_BK_REGS
 endif
@@ -388,7 +402,7 @@ endif
 CFLAGS  += -DDEFAULT_F_LOCK=$(DEFAULT_F_LOCK)
 
 LDFLAGS =
-LDFLAGS += -z noexecstack -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld -Wl,--gc-sections
+LDFLAGS += -z noexecstack -mcpu=cortex-m0 -nostartfiles -Wl,-T,firmware.ld -Wl,--gc-sections -Wl,-Map=firmware.map
 
 # Use newlib-nano instead of newlib
 LDFLAGS += --specs=nano.specs
@@ -462,7 +476,7 @@ bsp/dp32g030/%.h: hardware/dp32g030/%.def
 -include $(DEPS)
 
 clean:
-	$(RM) $(call FixPath, $(TARGET).bin $(TARGET).packed.bin $(TARGET) $(OBJS) $(DEPS))
+	$(RM) $(call FixPath, $(TARGET).bin $(TARGET).packed.bin $(TARGET) $(OBJS) $(DEPS) firmware.map)
 
 doxygen:
 	doxygen

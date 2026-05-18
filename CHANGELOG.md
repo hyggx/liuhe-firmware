@@ -9,6 +9,104 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Chinese localisation — language audit fixes (branch: `main`)
+
+Flash budget (2026-05-18, `ENABLE_CHINESE=1`, default config):
+`text 60 860 B / 61 440 B` — **580 B free**
+(`ENABLE_FLASHLIGHT` and `ENABLE_VOX` auto-disabled to fit CJK renderer).
+
+- **[P1] `board.c` / `Makefile` — CRC peripheral not initialised for CN-only builds** —
+  `CRC_Init()` in `BOARD_Init()` was guarded by
+  `#if defined(ENABLE_UART) || defined(ENABLED_AIRCOPY)`.
+  Two bugs: (1) `ENABLED_AIRCOPY` is a typo — the correct macro is `ENABLE_AIRCOPY`;
+  (2) `ENABLE_CHINESE` was absent, so a build with
+  `ENABLE_CHINESE=1 ENABLE_UART=0` would call `CRC_Calculate()` from
+  `UI_PrintStringMixed` without the CRC peripheral being clocked, causing
+  a fault.
+  Fix: typo corrected to `ENABLE_AIRCOPY`; `defined(ENABLE_CHINESE)` added to
+  the `#if` guard.  Matching fix in `Makefile`: `ENABLE_CHINESE` added to the
+  `$(filter ...)` condition that selects `driver/crc.o`, ensuring the object is
+  always linked for CN builds regardless of `ENABLE_UART`.
+
+- **[P1] `ui/menu.c` — non-custom menu branch rendered Chinese titles with ASCII font** —
+  `#ifndef ENABLE_CUSTOM_MENU_LAYOUT` path called `UI_PrintString(title, …, 8)`
+  directly, which uses the built-in ASCII 8×8 font.  With `ENABLE_CHINESE=1` and
+  `ENABLE_CUSTOM_MENU_LAYOUT=0`, all three visible menu-title rows were rendered as
+  garbled ASCII glyphs.
+  Fix: replaced with `SUBV_PRINT(title, …)`, which expands to
+  `UI_PrintStringMixed` in CN builds (EEPROM CJK font lookup) or
+  `UI_PrintString(…, 8)` in non-CN builds (existing behaviour unchanged).
+
+- **[P2] CJK font binary — 8-byte header with magic, version, CRC-16/CCITT** —
+  The font binary written to EEPROM at `0x2000` previously had no integrity
+  metadata.  A blank or stale EEPROM caused `UI_PrintStringMixed` to read
+  arbitrary data as a glyph table, producing garbage or out-of-bounds reads.
+  New header layout (8 bytes, little-endian):
+
+  | Offset | Field      | Value  | Notes                         |
+  |--------|------------|--------|-------------------------------|
+  | 0–1    | `magic`    | 0x4B36 | 'K','6' LE                    |
+  | 2–3    | `count`    | n      | glyph count                   |
+  | 4      | `version`  | 1      |                               |
+  | 5      | `pad`      | 0      |                               |
+  | 6–7    | `crc16`    | –      | CRC-16/CCITT over bytes 0–5   |
+
+  `ui/helper.c` `UI_PrintStringMixed`: reads header, validates magic, version,
+  and CRC (using `CRC_Calculate`); silently skips CJK rendering on failure.
+  `tools/gen_cjk_font.py`: emits the header; software CRC matches the
+  DP32G030 hardware peripheral (poly 0x1021, init 0, no reflection).
+  Also updated to scan `ui/menu.c` for codepoints in addition to
+  `ui/menu_lang.c` and `ui/menu_sub_values_cn.c`.
+
+- **[P2] `app/uart.c` CMD_051B — EEPROM read boundary extended to 64 KB** —
+  EEPROM constants updated: `EEPROM_SIZE = 0x10000u`, `EEPROM_FONT_BASE = 0x2000u`
+  in `driver/eeprom.h`.  CMD_051B guard now checks
+  `Offset + Size <= EEPROM_SIZE` (was `Offset + Size <= 0x2000`), allowing
+  UART reads of the full AT24C512 address space including the font region.
+
+- **[P2] `ui/menu_sub_values_cn.c` / `ui/menu.c` — missing Chinese sub-menu values** —
+  Three sub-menu cases in `MENU_DrawValues` always displayed English strings
+  regardless of the active UI language:
+  - `MENU_AL_MOD`: now uses existing `gSubMenu_AL_MOD_CN[]` via `SUBV()`.
+  - `MENU_F_LOCK`: added `gSubMenu_F_LOCK_CN[F_LOCK_LEN]` with translated
+    band-plan labels; the "READ MANUAL" unlock-confirmation string mapped to
+    "阅读\n手册".
+  - `MENU_F1SHRT` / `MENU_F1LONG` / `MENU_F2SHRT` / `MENU_F2LONG` / `MENU_MLONG`
+    (side-key function names): added `gSidefuncCN[ACTION_OPT_LEN]` indexed by
+    `t_sidefunction.id` (`ACTION_OPT_t`), covering all 15 `ACTION_OPT_*` values.
+  Extern declarations added to `ui/menu_sub_values_cn.h`.
+
+- **[P2] `ui/helper.h` — `SUBV_PRINT` dispatch macro** —
+  Added `SUBV_PRINT(str, x1, x2, line)`:
+  expands to `UI_PrintStringMixed(…)` in CN builds,
+  `UI_PrintString(…, 8)` in non-CN builds.
+  Used throughout `ui/menu.c` to display the currently-selected menu title
+  in the appropriate font without call-site `#ifdef` chains.
+
+- **[P2] `ui/menu.c` — adjacent menu items: compile-time → runtime language check** —
+  The two `while` loops that draw neighbouring (smaller-font) menu items in the
+  custom layout were wrapped in `#ifndef ENABLE_CHINESE`, causing them to be
+  compiled out entirely in CN builds.  Consequence: with `ENABLE_CHINESE=1` but
+  `gUiLanguage == UI_LANGUAGE_EN` (English selected at runtime), the neighbouring
+  items were never drawn.
+  Fix: guards replaced with `#ifdef ENABLE_CHINESE if (gUiLanguage != UI_LANGUAGE_CN)`
+  so adjacent items are drawn whenever the active language is not Chinese, regardless
+  of how the firmware was compiled.
+
+- **[build] `Makefile` — auto-disable `FLASHLIGHT` and `VOX` for CN builds** —
+  `ENABLE_CHINESE=1` now automatically sets `ENABLE_FLASHLIGHT := 0` and
+  `ENABLE_VOX := 0` to reclaim the ~1.4 KB needed by the CJK renderer and
+  string tables without exceeding the 61 440 B flash limit.
+
+- **[build] `Makefile` — link map output and clean target** —
+  Added `-Wl,-Map=firmware.map` to `LDFLAGS`; `firmware.map` added to `clean` target.
+  Enables precise per-symbol flash analysis via `grep` on the map file.
+
+- **[tool] `tools/flash_font.py` — write-back verification enabled by default** —
+  Verify pass (read-back and compare every written block) is now performed
+  automatically after writing.  Pass `--no-verify` to skip.  Previously
+  verification required the explicit `--verify` flag.
+
 ### Fixed — AM Fix bugs (branch: `k6-hardening`)
 
 - **[P1] `radio.c` `RADIO_SetupAGC`** —

@@ -217,6 +217,13 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 			*pMax = ARRAY_SIZE(gSubMenu_RESET) - 1;
 			break;
 
+#ifdef ENABLE_CHINESE
+		case MENU_LANGUAGE:
+			*pMin = 0;
+			*pMax = 1;  /* 0=English, 1=Chinese */
+			break;
+#endif
+
 		case MENU_COMPAND:
 		case MENU_ABR_ON_TX_RX:
 			*pMin = 0;
@@ -724,6 +731,13 @@ void MENU_AcceptSetting(void)
 			SETTINGS_FactoryReset(gSubMenuSelection);
 			return;
 
+#ifdef ENABLE_CHINESE
+		case MENU_LANGUAGE:
+			gUiLanguage = (uint8_t)gSubMenuSelection;
+			SETTINGS_SaveLanguage();
+			return;
+#endif
+
 		case MENU_350TX:
 			gSetting_350TX = gSubMenuSelection;
 			break;
@@ -837,6 +851,11 @@ void MENU_ShowCurrentSetting(void)
 			gSubMenuSelection = 0;
 			break;
 
+#ifdef ENABLE_CHINESE
+		case MENU_LANGUAGE:
+			gSubMenuSelection = gUiLanguage;
+			break;
+#endif
 		case MENU_R_DCS:
 		case MENU_R_CTCS:
 		{

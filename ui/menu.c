@@ -35,6 +35,17 @@
 #include "inputbox.h"
 #include "menu.h"
 #include "ui.h"
+#ifdef ENABLE_CHINESE
+	#include "menu_lang.h"
+	#include "menu_sub_values_cn.h"
+#endif
+
+/* Localised menu title: returns CN string in CN mode, else ASCII .name */
+#ifdef ENABLE_CHINESE
+	#define _MENU_TITLE(item)  UI_MENU_GetMenuTitle(item)
+#else
+	#define _MENU_TITLE(item)  ((item)->name)
+#endif
 
 
 const t_menu_item MenuList[] =
@@ -123,6 +134,9 @@ const t_menu_item MenuList[] =
 	{"BatVol", VOICE_ID_INVALID,                       MENU_VOL           }, // was "VOL"
 	{"RxMode", VOICE_ID_DUAL_STANDBY,                  MENU_TDR           },
 	{"Sql",    VOICE_ID_SQUELCH,                       MENU_SQL           },
+#ifdef ENABLE_CHINESE
+	{"Lang",   VOICE_ID_INVALID,                       MENU_LANGUAGE      },
+#endif
 
 	// hidden menu items from here on
 	// enabled if pressing both the PTT and upper side button at power-on
@@ -413,7 +427,7 @@ void UI_DisplayMenu(void)
 	for (i = 0; i < 3; i++)
 		if (gMenuCursor > 0 || i > 0)
 			if ((gMenuListCount - 1) != gMenuCursor || i != 2)
-				UI_PrintString(MenuList[gMenuCursor + i - 1].name, 0, 0, i * 2, 8);
+		SUBV_PRINT(_MENU_TITLE(&MenuList[gMenuCursor + i - 1]), 0, 0, i * 2);
 
 	// invert the current menu list item pixels
 	for (i = 0; i < (8 * menu_list_width); i++)
@@ -441,40 +455,46 @@ void UI_DisplayMenu(void)
 		i = 1;
 
 		if (!gIsInSubMenu) {
-			while (i < 2)
-			{	// leading menu items - small text
-				const int k = menu_index + i - 2;
-				if (k < 0)
-					UI_PrintStringSmallNormal(MenuList[gMenuListCount + k].name, 0, 0, i);  // wrap-a-round
-				else if (k >= 0 && k < (int)gMenuListCount)
-					UI_PrintStringSmallNormal(MenuList[k].name, 0, 0, i);
-				i++;
+#ifdef ENABLE_CHINESE
+			if (gUiLanguage != UI_LANGUAGE_CN)
+#endif
+			{
+				while (i < 2)
+				{	// leading menu items - small text
+					const int k = menu_index + i - 2;
+					if (k < 0)
+						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[gMenuListCount + k]), 0, 0, i);  // wrap-a-round
+					else if (k >= 0 && k < (int)gMenuListCount)
+						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[k]), 0, 0, i);
+					i++;
+				}
 			}
-
 			// current menu item - keep big n fat
 			if (menu_index >= 0 && menu_index < (int)gMenuListCount)
-				UI_PrintString(MenuList[menu_index].name, 0, 0, 2, 8);
-			i++;
+				SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, 0, 2);
+			i = 3;  // explicit: trailing loop always starts at i=3
 
-			while (i < 4)
-			{	// trailing menu item - small text
-				const int k = menu_index + i - 2;
-				if (k >= 0 && k < (int)gMenuListCount)
-					UI_PrintStringSmallNormal(MenuList[k].name, 0, 0, 1 + i);
-				else if (k >= (int)gMenuListCount)
-					UI_PrintStringSmallNormal(MenuList[gMenuListCount - k].name, 0, 0, 1 + i);  // wrap-a-round
-				i++;
+#ifdef ENABLE_CHINESE
+			if (gUiLanguage != UI_LANGUAGE_CN)
+#endif
+			{
+				while (i < 4)
+				{	// trailing menu item - small text
+					const int k = menu_index + i - 2;
+					if (k >= 0 && k < (int)gMenuListCount)
+						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[k]), 0, 0, 1 + i);
+					else if (k >= (int)gMenuListCount)
+						UI_PrintStringSmallNormal(_MENU_TITLE(&MenuList[gMenuListCount - k]), 0, 0, 1 + i);  // wrap-a-round
+					i++;
+				}
 			}
-
 			// draw the menu index number/count
 			sprintf(String, "%2u.%u", 1 + gMenuCursor, gMenuListCount);
 			UI_PrintStringSmallNormal(String, 2, 0, 6);
 		}
 		else if (menu_index >= 0 && menu_index < (int)gMenuListCount)
 		{	// current menu item
-//			strcat(String, ":");
-			UI_PrintString(MenuList[menu_index].name, 0, 0, 0, 8);
-//			UI_PrintStringSmallNormal(String, 0, 0, 0);
+			SUBV_PRINT(_MENU_TITLE(&MenuList[menu_index]), 0, 0, 0);
 		}
 	}
 #endif
@@ -506,7 +526,7 @@ void UI_DisplayMenu(void)
 
 		#ifdef ENABLE_AUDIO_BAR
 			case MENU_MIC_BAR:
-				strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
+				strcpy(String, SUBV(gSubMenu_OFF_ON[gSubMenuSelection], gSubMenu_OFF_ON_CN[gSubMenuSelection]));
 				break;
 		#endif
 
@@ -518,7 +538,7 @@ void UI_DisplayMenu(void)
 
 		case MENU_TXP: {
 			static const char * const txp_watts[] = {"~0.5W", "~2W", "~5W"};
-			sprintf(String, "%s\n%s", gSubMenu_TXP[gSubMenuSelection], txp_watts[gSubMenuSelection]);
+			sprintf(String, "%s\n%s", SUBV(gSubMenu_TXP[gSubMenuSelection], gSubMenu_TXP_CN[gSubMenuSelection]), txp_watts[gSubMenuSelection]);
 			break;
 		}
 
@@ -543,7 +563,7 @@ void UI_DisplayMenu(void)
 		}
 
 		case MENU_SFT_D:
-			strcpy(String, gSubMenu_SFT_D[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_SFT_D[gSubMenuSelection], gSubMenu_SFT_D_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_OFFSET:
@@ -565,7 +585,7 @@ void UI_DisplayMenu(void)
 			break;
 
 		case MENU_W_N:
-			strcpy(String, gSubMenu_W_N[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_W_N[gSubMenuSelection], gSubMenu_W_N_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_SCR:
@@ -588,7 +608,7 @@ void UI_DisplayMenu(void)
 		#endif
 
 		case MENU_ABR:
-			strcpy(String, gSubMenu_BACKLIGHT[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_BACKLIGHT[gSubMenuSelection], gSubMenu_BACKLIGHT_CN[gSubMenuSelection]));
 			if(BACKLIGHT_GetBrightness() < 4)
 				BACKLIGHT_SetBrightness(4);
 			break;
@@ -607,12 +627,12 @@ void UI_DisplayMenu(void)
 			break;
 
 		case MENU_AUTOLK:
-			strcpy(String, (gSubMenuSelection == 0) ? "OFF" : "AUTO");
+			strcpy(String, SUBV((gSubMenuSelection == 0) ? "OFF" : "AUTO", (gSubMenuSelection == 0) ? "\xe5\x85\xb3" : "\xe8\x87\xaa\xe5\x8a\xa8"));
 			break;
 
 		case MENU_COMPAND:
 		case MENU_ABR_ON_TX_RX:
-			strcpy(String, gSubMenu_RX_TX[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_RX_TX[gSubMenuSelection], gSubMenu_RX_TX_CN[gSubMenuSelection]));
 			break;
 
 		#ifdef ENABLE_AM_FIX
@@ -636,7 +656,7 @@ void UI_DisplayMenu(void)
 		case MENU_500TX:
 		case MENU_350EN:
 		case MENU_SCREN:
-			strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_OFF_ON[gSubMenuSelection], gSubMenu_OFF_ON_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_MEM_CH:
@@ -697,15 +717,15 @@ void UI_DisplayMenu(void)
 		}
 
 		case MENU_SAVE:
-			strcpy(String, gSubMenu_SAVE[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_SAVE[gSubMenuSelection], gSubMenu_SAVE_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_TDR:
-			strcpy(String, gSubMenu_RXMode[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_RXMode[gSubMenuSelection], gSubMenu_RXMode_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_TOT:
-			strcpy(String, gSubMenu_TOT[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_TOT[gSubMenuSelection], gSubMenu_TOT_CN[gSubMenuSelection]));
 			break;
 
 		#ifdef ENABLE_VOICE
@@ -715,30 +735,30 @@ void UI_DisplayMenu(void)
 		#endif
 
 		case MENU_SC_REV:
-			strcpy(String, gSubMenu_SC_REV[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_SC_REV[gSubMenuSelection], gSubMenu_SC_REV_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_MDF:
-			strcpy(String, gSubMenu_MDF[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_MDF[gSubMenuSelection], gSubMenu_MDF_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_RP_STE:
 			if (gSubMenuSelection == 0)
-				strcpy(String, "OFF");
+				strcpy(String, SUBV("OFF", "\xe5\x85\xb3"));
 			else
 				sprintf(String, "%d*100ms", gSubMenuSelection);
 			break;
 
 		case MENU_S_LIST:
 			if (gSubMenuSelection < 2)
-				sprintf(String, "LIST%u", 1 + gSubMenuSelection);
+				sprintf(String, SUBV("LIST%u", "\xe5\x88\x97\xe8\xa1\xa8%u"), 1 + gSubMenuSelection);
 			else
-				strcpy(String, "ALL");
+				strcpy(String, SUBV("ALL", "\xe5\x85\xa8\xe9\x83\xa8"));
 			break;
 
 		#ifdef ENABLE_ALARM
 			case MENU_AL_MOD:
-				sprintf(String, gSubMenu_AL_MOD[gSubMenuSelection]);
+				strcpy(String, SUBV(gSubMenu_AL_MOD[gSubMenuSelection], gSubMenu_AL_MOD_CN[gSubMenuSelection]));
 				break;
 		#endif
 
@@ -773,7 +793,7 @@ void UI_DisplayMenu(void)
 			break;
 
 		case MENU_BAT_TXT:
-			strcpy(String, gSubMenu_BAT_TXT[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_BAT_TXT[gSubMenuSelection], gSubMenu_BAT_TXT_CN[gSubMenuSelection]));
 			break;
 
 #ifdef ENABLE_DTMF_CALLING
@@ -787,11 +807,11 @@ void UI_DisplayMenu(void)
 #endif
 
 		case MENU_PONMSG:
-			strcpy(String, gSubMenu_PONMSG[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_PONMSG[gSubMenuSelection], gSubMenu_PONMSG_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_ROGER:
-			strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_ROGER[gSubMenuSelection], gSubMenu_ROGER_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_VOL:
@@ -801,14 +821,20 @@ void UI_DisplayMenu(void)
 			break;
 
 		case MENU_RESET:
-			strcpy(String, gSubMenu_RESET[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_RESET[gSubMenuSelection], gSubMenu_RESET_CN[gSubMenuSelection]));
 			break;
+
+#ifdef ENABLE_CHINESE
+		case MENU_LANGUAGE:
+			strcpy(String, gSubMenu_LANGUAGE[gSubMenuSelection]);
+			break;
+#endif
 
 		case MENU_F_LOCK:
 			if(!gIsInSubMenu && gUnlockAllTxConfCnt>0 && gUnlockAllTxConfCnt<10)
-				strcpy(String, "READ\nMANUAL");
+				strcpy(String, SUBV("READ\nMANUAL", "\xe9\x98\x85\xe8\xaf\xbb\n\xe6\x89\x8b\xe5\x86\x8c"));
 			else
-				strcpy(String, gSubMenu_F_LOCK[gSubMenuSelection]);
+				strcpy(String, SUBV(gSubMenu_F_LOCK[gSubMenuSelection], gSubMenu_F_LOCK_CN[gSubMenuSelection]));
 			break;
 
 		#ifdef ENABLE_F_CAL_MENU
@@ -834,7 +860,7 @@ void UI_DisplayMenu(void)
 		}
 
 		case MENU_BATTYP:
-			strcpy(String, gSubMenu_BATTYP[gSubMenuSelection]);
+			strcpy(String, SUBV(gSubMenu_BATTYP[gSubMenuSelection], gSubMenu_BATTYP_CN[gSubMenuSelection]));
 			break;
 
 		case MENU_F1SHRT:
@@ -842,7 +868,8 @@ void UI_DisplayMenu(void)
 		case MENU_F2SHRT:
 		case MENU_F2LONG:
 		case MENU_MLONG:
-			strcpy(String, gSubMenu_SIDEFUNCTIONS[gSubMenuSelection].name);
+			strcpy(String, SUBV(gSubMenu_SIDEFUNCTIONS[gSubMenuSelection].name,
+			                    gSidefuncCN[gSubMenu_SIDEFUNCTIONS[gSubMenuSelection].id]));
 			break;
 
 	}
@@ -886,7 +913,7 @@ void UI_DisplayMenu(void)
 				if (small)
 					UI_PrintStringSmallNormal(String + i, menu_item_x1, menu_item_x2, y);
 				else
-					UI_PrintString(String + i, menu_item_x1, menu_item_x2, y, 8);
+					SUBV_PRINT(String + i, menu_item_x1, menu_item_x2, y);
 
 				// look for start of next line
 				while (i < len && String[i] >= 32)

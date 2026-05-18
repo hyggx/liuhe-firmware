@@ -1,0 +1,229 @@
+/* Copyright 2024 egzumer / Hygg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Localised menu-title strings for Simplified Chinese (UTF-8).
+ * All CJK strings reference characters that must be present in the
+ * CJK bitmap font written to AT24C512 EEPROM at 0x2000.
+ * Run  tools/gen_cjk_font.py  to generate the font binary.
+ */
+
+#ifdef ENABLE_CHINESE
+
+#include "settings.h"   /* gUiLanguage, UI_LANGUAGE_CN */
+#include "ui/menu.h"    /* t_menu_item, MENU_* enum */
+
+/* ---------------------------------------------------------------------------
+ * Chinese menu title strings (2-4 characters, UTF-8 encoded).
+ *
+ * Character format:  "\\xHH\\xHH\\xHH"  per CJK character (3 bytes each).
+ * ---------------------------------------------------------------------------
+ */
+
+/* Visible items */
+/* 静噪  */ static const char cn_SQL[]       = "\xe9\x9d\x99\xe5\x99\xaa";
+/* 步进  */ static const char cn_STEP[]      = "\xe6\xad\xa5\xe8\xbf\x9b";
+/* 功率  */ static const char cn_TXP[]       = "\xe5\x8a\x9f\xe7\x8e\x87";
+/* 收DCS */ static const char cn_R_DCS[]     = "\xe6\x94\xb6\x44\x43\x53";
+/* 收CTCS*/ static const char cn_R_CTCS[]    = "\xe6\x94\xb6\x43\x54\x43\x53";
+/* 发DCS */ static const char cn_T_DCS[]     = "\xe5\x8f\x91\x44\x43\x53";
+/* 发CTCS*/ static const char cn_T_CTCS[]    = "\xe5\x8f\x91\x43\x54\x43\x53";
+/* 偏移向 */ static const char cn_SFT_D[]   = "\xe5\x81\x8f\xe7\xa7\xbb\xe5\x90\x91";
+/* 偏移频 */ static const char cn_OFFSET[]  = "\xe5\x81\x8f\xe7\xa7\xbb\xe9\xa2\x91";
+/* 超时  */ static const char cn_TOT[]      = "\xe8\xb6\x85\xe6\x97\xb6";
+/* 带宽  */ static const char cn_W_N[]      = "\xe5\xb8\xa6\xe5\xae\xbd";
+/* 加密  */ static const char cn_SCR[]      = "\xe5\x8a\xa0\xe5\xaf\x86";
+/* 忙锁  */ static const char cn_BCL[]      = "\xe5\xbf\x99\xe9\x94\x81";
+/* 存信道 */ static const char cn_MEM_CH[]  = "\xe5\xad\x98\xe4\xbf\xa1\xe9\x81\x93";
+/* 删信道 */ static const char cn_DEL_CH[]  = "\xe5\x88\xa0\xe4\xbf\xa1\xe9\x81\x93";
+/* 信道名 */ static const char cn_MEM_NAME[]= "\xe4\xbf\xa1\xe9\x81\x93\xe5\x90\x8d";
+/* 信道显 */ static const char cn_MDF[]     = "\xe4\xbf\xa1\xe9\x81\x93\xe6\x98\xbe";
+/* 省电  */ static const char cn_SAVE[]     = "\xe7\x9c\x81\xe7\x94\xb5";
+/* VOX   */ static const char cn_VOX[]      = "VOX";
+/* 背光  */ static const char cn_ABR[]      = "\xe8\x83\x8c\xe5\x85\x89";
+/* 收发光 */ static const char cn_ABR_TRX[] = "\xe6\x94\xb6\xe5\x8f\x91\xe5\x85\x89";
+/* 背光低 */ static const char cn_ABR_MIN[] = "\xe8\x83\x8c\xe5\x85\x89\xe4\xbd\x8e";
+/* 背光高 */ static const char cn_ABR_MAX[] = "\xe8\x83\x8c\xe5\x85\x89\xe9\xab\x98";
+/* 双守  */ static const char cn_TDR[]      = "\xe5\x8f\x8c\xe5\xae\x88";
+/* 提示音 */ static const char cn_BEEP[]    = "\xe6\x8f\x90\xe7\xa4\xba\xe9\x9f\xb3";
+/* 语音  */ 
+#ifdef ENABLE_VOICE
+static const char cn_VOICE[]    = "\xe8\xaf\xad\xe9\x9f\xb3";
+#endif
+/* 扫描恢 */ static const char cn_SC_REV[]  = "\xe6\x89\xab\xe6\x8f\x8f\xe6\x81\xa2";
+/* 自动锁 */ static const char cn_AUTOLK[]  = "\xe8\x87\xaa\xe5\x8a\xa8\xe9\x94\x81";
+/* 扫描1  */ static const char cn_S_ADD1[]  = "\xe6\x89\xab\xe6\x8f\x8f\x31";
+/* 扫描2  */ static const char cn_S_ADD2[]  = "\xe6\x89\xab\xe6\x8f\x8f\x32";
+/* 拖尾音 */ static const char cn_STE[]     = "\xe6\x8b\x96\xe5\xb0\xbe\xe9\x9f\xb3";
+/* 中继消 */ static const char cn_RP_STE[]  = "\xe4\xb8\xad\xe7\xbb\xa7\xe6\xb6\x88";
+/* 麦克风 */ static const char cn_MIC[]     = "\xe9\xba\xa6\xe5\x85\x8b\xe9\xa3\x8e";
+/* 音量条 */ static const char cn_MIC_BAR[] = "\xe9\x9f\xb3\xe9\x87\x8f\xe6\x9d\xa1";
+/* 压扩  */ static const char cn_COMPAND[]  = "\xe5\x8e\x8b\xe6\x89\xa9";
+/* 一键呼 */ static const char cn_1_CALL[]  = "\xe4\xb8\x80\xe9\x94\xae\xe5\x91\xbc";
+/* 扫描列 */ static const char cn_S_LIST[]  = "\xe6\x89\xab\xe6\x8f\x8f\xe5\x88\x97";
+/* 列表1  */ static const char cn_SLIST1[]  = "\xe5\x88\x97\xe8\xa1\xa8\x31";
+/* 列表2  */ static const char cn_SLIST2[]  = "\xe5\x88\x97\xe8\xa1\xa8\x32";
+/* 调制  */ static const char cn_AM[]       = "\xe8\xb0\x83\xe5\x88\xb6";
+/* AM修正 */ static const char cn_AM_FIX[]  = "AM\xe4\xbf\xae\xe6\xad\xa3";
+/* NOAA  */
+#ifdef ENABLE_NOAA
+static const char cn_NOAA_S[]   = "NOAA";
+#endif
+/* 上行码 */ static const char cn_UPCODE[]  = "\xe4\xb8\x8a\xe8\xa1\x8c\xe7\xa0\x81";
+/* 下行码 */ static const char cn_DWCODE[]  = "\xe4\xb8\x8b\xe8\xa1\x8c\xe7\xa0\x81";
+/* PTT ID*/ static const char cn_PTT_ID[]   = "PTT ID";
+/* DTMF音 */ static const char cn_D_ST[]   = "DTMF\xe9\x9f\xb3";
+/* DTMF响 */
+#ifdef ENABLE_DTMF_CALLING
+static const char cn_D_RSP[]  = "DTMF\xe5\x93\x8d";
+#endif
+/* DTMF保 */
+#ifdef ENABLE_DTMF_CALLING
+static const char cn_D_HOLD[] = "DTMF\xe4\xbf\x9d";
+#endif
+/* DTMF预 */ static const char cn_D_PRE[]  = "DTMF\xe9\xa2\x84";
+/* DTMF解 */
+#ifdef ENABLE_DTMF_CALLING
+static const char cn_D_DCD[]  = "DTMF\xe8\xa7\xa3";
+#endif
+/* DTMF册 */
+#ifdef ENABLE_DTMF_CALLING
+static const char cn_D_LIST[] = "DTMF\xe5\x86\x8c";
+#endif
+/* 实时解 */ static const char cn_D_LIVE[] = "\xe5\xae\x9e\xe6\x97\xb6\xe8\xa7\xa3";
+/* 开机消 */ static const char cn_PONMSG[]  = "\xe5\xbc\x80\xe6\x9c\xba\xe6\xb6\x88";
+/* 结束音 */ static const char cn_ROGER[]   = "\xe7\xbb\x93\xe6\x9d\x9f\xe9\x9f\xb3";
+/* 电量  */ static const char cn_VOL[]      = "\xe7\x94\xb5\xe9\x87\x8f";
+/* 电量文 */ static const char cn_BAT_TXT[] = "\xe7\x94\xb5\xe9\x87\x8f\xe6\x96\x87";
+/* 报警  */
+#ifdef ENABLE_ALARM
+static const char cn_AL_MOD[]   = "\xe6\x8a\xa5\xe8\xad\xa6";
+#endif
+/* 语言  */ static const char cn_LANGUAGE[] = "\xe8\xaf\xad\xe8\xa8\x80";
+/* 复位  */ static const char cn_RESET[]    = "\xe5\xa4\x8d\xe4\xbd\x8d";
+/* Hidden items */
+/* 频率锁 */ static const char cn_F_LOCK[]  = "\xe9\xa2\x91\xe7\x8e\x87\xe9\x94\x81";
+/* 200TX */ static const char cn_200TX[]    = "\xe5\x8f\x91\x32\x30\x30";
+/* 350TX */ static const char cn_350TX[]    = "\xe5\x8f\x91\x33\x35\x30";
+/* 500TX */ static const char cn_500TX[]    = "\xe5\x8f\x91\x35\x30\x30";
+/* 350EN */ static const char cn_350EN[]    = "\x33\x35\x30\xe5\xbc\x80";
+/* 加扰开 */ static const char cn_SCREN[]   = "\xe5\x8a\xa0\xe6\x89\xb0\xe5\xbc\x80";
+/* 频率校 */
+#ifdef ENABLE_F_CAL_MENU
+static const char cn_F_CALI[]  = "\xe9\xa2\x91\xe7\x8e\x87\xe6\xa0\xa1";
+#endif
+/* 电池校 */ static const char cn_BATCAL[]  = "\xe7\x94\xb5\xe6\xb1\xa0\xe6\xa0\xa1";
+/* 键1短  */ static const char cn_F1SHRT[]  = "\xe9\x94\xae\x31\xe7\x9f\xad";
+/* 键1长  */ static const char cn_F1LONG[]  = "\xe9\x94\xae\x31\xe9\x95\xbf";
+/* 键2短  */ static const char cn_F2SHRT[]  = "\xe9\x94\xae\x32\xe7\x9f\xad";
+/* 键2长  */ static const char cn_F2LONG[]  = "\xe9\x94\xae\x32\xe9\x95\xbf";
+/* M键长  */ static const char cn_MLONG[]   = "M\xe9\x95\xbf\xe6\x8c\x89";
+/* 电池型 */ static const char cn_BATTYP[]  = "\xe7\x94\xb5\xe6\xb1\xa0\xe5\x9e\x8b";
+
+const char *UI_MENU_GetMenuTitle(const t_menu_item *item)
+{
+	if (gUiLanguage != UI_LANGUAGE_CN)
+		return item->name;
+
+	switch (item->menu_id) {
+		case MENU_SQL:       return cn_SQL;
+		case MENU_STEP:      return cn_STEP;
+		case MENU_TXP:       return cn_TXP;
+		case MENU_R_DCS:     return cn_R_DCS;
+		case MENU_R_CTCS:    return cn_R_CTCS;
+		case MENU_T_DCS:     return cn_T_DCS;
+		case MENU_T_CTCS:    return cn_T_CTCS;
+		case MENU_SFT_D:     return cn_SFT_D;
+		case MENU_OFFSET:    return cn_OFFSET;
+		case MENU_TOT:       return cn_TOT;
+		case MENU_W_N:       return cn_W_N;
+		case MENU_SCR:       return cn_SCR;
+		case MENU_BCL:       return cn_BCL;
+		case MENU_MEM_CH:    return cn_MEM_CH;
+		case MENU_DEL_CH:    return cn_DEL_CH;
+		case MENU_MEM_NAME:  return cn_MEM_NAME;
+		case MENU_MDF:       return cn_MDF;
+		case MENU_SAVE:      return cn_SAVE;
+#ifdef ENABLE_VOX
+		case MENU_VOX:       return cn_VOX;
+#endif
+		case MENU_ABR:       return cn_ABR;
+		case MENU_ABR_ON_TX_RX: return cn_ABR_TRX;
+		case MENU_ABR_MIN:   return cn_ABR_MIN;
+		case MENU_ABR_MAX:   return cn_ABR_MAX;
+		case MENU_TDR:       return cn_TDR;
+		case MENU_BEEP:      return cn_BEEP;
+#ifdef ENABLE_VOICE
+		case MENU_VOICE:     return cn_VOICE;
+#endif
+		case MENU_SC_REV:    return cn_SC_REV;
+		case MENU_AUTOLK:    return cn_AUTOLK;
+		case MENU_S_ADD1:    return cn_S_ADD1;
+		case MENU_S_ADD2:    return cn_S_ADD2;
+		case MENU_STE:       return cn_STE;
+		case MENU_RP_STE:    return cn_RP_STE;
+		case MENU_MIC:       return cn_MIC;
+#ifdef ENABLE_AUDIO_BAR
+		case MENU_MIC_BAR:   return cn_MIC_BAR;
+#endif
+		case MENU_COMPAND:   return cn_COMPAND;
+		case MENU_1_CALL:    return cn_1_CALL;
+		case MENU_S_LIST:    return cn_S_LIST;
+		case MENU_SLIST1:    return cn_SLIST1;
+		case MENU_SLIST2:    return cn_SLIST2;
+		case MENU_AM:        return cn_AM;
+#ifdef ENABLE_AM_FIX
+		case MENU_AM_FIX:    return cn_AM_FIX;
+#endif
+#ifdef ENABLE_NOAA
+		case MENU_NOAA_S:    return cn_NOAA_S;
+#endif
+		case MENU_UPCODE:    return cn_UPCODE;
+		case MENU_DWCODE:    return cn_DWCODE;
+		case MENU_PTT_ID:    return cn_PTT_ID;
+		case MENU_D_ST:      return cn_D_ST;
+#ifdef ENABLE_DTMF_CALLING
+		case MENU_D_RSP:     return cn_D_RSP;
+		case MENU_D_HOLD:    return cn_D_HOLD;
+#endif
+		case MENU_D_PRE:     return cn_D_PRE;
+#ifdef ENABLE_DTMF_CALLING
+		case MENU_D_DCD:     return cn_D_DCD;
+		case MENU_D_LIST:    return cn_D_LIST;
+#endif
+		case MENU_D_LIVE_DEC: return cn_D_LIVE;
+		case MENU_PONMSG:    return cn_PONMSG;
+		case MENU_ROGER:     return cn_ROGER;
+		case MENU_VOL:       return cn_VOL;
+		case MENU_BAT_TXT:   return cn_BAT_TXT;
+#ifdef ENABLE_ALARM
+		case MENU_AL_MOD:    return cn_AL_MOD;
+#endif
+		case MENU_LANGUAGE:  return cn_LANGUAGE;
+		case MENU_RESET:     return cn_RESET;
+		/* Hidden items */
+		case MENU_F_LOCK:    return cn_F_LOCK;
+		case MENU_200TX:     return cn_200TX;
+		case MENU_350TX:     return cn_350TX;
+		case MENU_500TX:     return cn_500TX;
+		case MENU_350EN:     return cn_350EN;
+		case MENU_SCREN:     return cn_SCREN;
+#ifdef ENABLE_F_CAL_MENU
+		case MENU_F_CALI:    return cn_F_CALI;
+#endif
+		case MENU_BATCAL:    return cn_BATCAL;
+		case MENU_F1SHRT:    return cn_F1SHRT;
+		case MENU_F1LONG:    return cn_F1LONG;
+		case MENU_F2SHRT:    return cn_F2SHRT;
+		case MENU_F2LONG:    return cn_F2LONG;
+		case MENU_MLONG:     return cn_MLONG;
+		case MENU_BATTYP:    return cn_BATTYP;
+		default:             return item->name;
+	}
+}
+
+#endif  /* ENABLE_CHINESE */

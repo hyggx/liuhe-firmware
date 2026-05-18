@@ -108,6 +108,9 @@ enum
 	MENU_NOAA_S,
 #endif
 	MENU_RESET,
+#ifdef ENABLE_CHINESE
+	MENU_LANGUAGE,
+#endif
 	MENU_F_LOCK,
 	MENU_200TX,
 	MENU_350TX,
@@ -158,6 +161,11 @@ extern const char        gSubMenu_RX_TX[4][6];
 extern const char        gSubMenu_BAT_TXT[3][8];
 extern const char 		 gSubMenu_BATTYP[2][9];
 extern const char        gSubMenu_SCRAMBLER[11][7];
+
+#ifdef ENABLE_CHINESE
+	extern const char  gSubMenu_LANGUAGE[2][8];
+	const char        *UI_MENU_GetMenuTitle(const t_menu_item *item);
+#endif
 
 typedef struct {char* name; uint8_t id;} t_sidefunction;
 extern const uint8_t 		 gSubMenu_SIDEFUNCTIONS_size;

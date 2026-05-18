@@ -41,11 +41,11 @@ void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size)
 
 void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer)
 {
-	/* [hyggx fix] Original check only tested Address >= 0x2000, which allows
-	 * Address = 0x1FF8..0x1FFF to pass while the subsequent fixed 8-byte write
-	 * would access 0x2000..0x2007 — past the end of the EEPROM.
-	 * Correct upper bound: Address must leave room for 8 bytes. */
-	if (pBuffer == NULL || Address > (0x2000u - 8u))
+	/* AT24C512 is 64 KB (0x0000-0xFFFF). Each call writes exactly 8 bytes,
+	 * so Address must be <= 0xFFF8 to stay within the chip.
+	 * Raised from the old 8 KB cap (0x1FF8) so the CJK font region
+	 * (0x2000-0xFFFF) can be written by the flash_font.py upload tool. */
+	if (pBuffer == NULL || Address > (uint16_t)(EEPROM_SIZE - 8u))
 		return;
 
 

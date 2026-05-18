@@ -19,6 +19,11 @@
 
 #include <stdint.h>
 
+/* AT24C512: 64 KB, addresses 0x0000-0xFFFF.
+ * Settings occupy 0x0000-0x1FFF; CJK font starts at 0x2000. */
+#define EEPROM_SIZE       0x10000u
+#define EEPROM_FONT_BASE  0x2000u
+
 void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size);
 void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer);
 

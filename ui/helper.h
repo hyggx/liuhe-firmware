@@ -37,4 +37,20 @@ void UI_DrawRectangleBuffer(uint8_t (*buffer)[128], int16_t x1, int16_t y1, int1
 
 void UI_DisplayClear();
 
+#ifdef ENABLE_CHINESE
+/* Render a UTF-8 string that may contain 3-byte CJK codepoints.
+ * ASCII chars use gFontBig (8px wide, 2 pages).
+ * CJK chars use 12x16 glyphs read from AT24C512 EEPROM at EEPROM_CJK_FONT_BASE.
+ * When the UI language is not CN the function falls back to UI_PrintString,
+ * preserving the original Start/End centering behaviour for English menus.
+ * Parameters: pString = null-terminated UTF-8 string.
+ *             Start   = left pixel column.
+ *             End     = right pixel column (0 = no right bound / centering).
+ *             Line    = framebuffer page (same convention as UI_PrintString). */
+void UI_PrintStringMixed(const char *pString, uint8_t Start, uint8_t End, uint8_t Line);
+#define SUBV_PRINT(str, x1, x2, line)  UI_PrintStringMixed((str), (x1), (x2), (line))
+#else
+#define SUBV_PRINT(str, x1, x2, line)  UI_PrintString((str), (x1), (x2), (line), 8)
+#endif
+
 #endif
