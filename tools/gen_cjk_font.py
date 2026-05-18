@@ -6,15 +6,19 @@ Usage:
     python tools/gen_cjk_font.py [OPTIONS]
 
 Options:
-    --font PATH       TrueType/OTF font file to use for rendering.
-                      Default: looks for system fonts (WenQuanYi, Noto CJK, etc.)
+    --bdf  PATH       BDF bitmap font file to use.
+                      Default: tools/wenquanyi_10pt.bdf (in same dir as this script)
     --out  PATH       Output binary file path.  Default: tools/cjk_font.bin
-    --size PX         Font render size in pixels.  Default: 12
     --chars FILE      Text file containing unique characters to include.
                       Default: auto-extracted from ui/menu_lang.c,
                       ui/menu_sub_values_cn.c and ui/menu.c in the
                       parent directory.
     --preview         Render an ASCII preview of each glyph to stdout.
+
+BDF baseline alignment:
+    BASELINE_SCREEN_ROW=11 places CJK glyphs (BBX 12×12, y_off=-1) at screen
+    rows 1-12, matching gFontBig ASCII digits which occupy rows 3-12.
+    Both CJK and ASCII share baseline at row 12 — no per-glyph misalignment.
 
 Output binary layout (AT24C512 EEPROM at offset 0x2000):
     Offset 0x0000:  uint16_t magic         = 0x4B36 ('K','6' little-endian)
@@ -25,9 +29,9 @@ Output binary layout (AT24C512 EEPROM at offset 0x2000):
     Offset 0x0008:  uint16_t codepoints[N] (sorted, little-endian)
                     ... padded to next 8-byte boundary ...
     Offset 0x0008 + pad(2N, 8):
-                    uint8_t  glyphs[N][24] (column-major, 12 cols x 2 bytes)
+                    uint8_t  glyphs[N][26] (column-major, 13 cols x 2 bytes)
 
-Glyph format  (12 wide × 16 tall pixels, column-major, LSB = top pixel):
+Glyph format  (13 wide × 16 tall pixels, column-major, LSB = top pixel):
     glyph[col*2 + 0] = rows  0-7  of column col
     glyph[col*2 + 1] = rows 8-15  of column col
 
@@ -41,9 +45,14 @@ import re
 import struct
 import sys
 
-GLYPH_WIDTH = 12
+GLYPH_WIDTH = 13
 GLYPH_HEIGHT = 16
 BYTES_PER_GLYPH = GLYPH_WIDTH * 2  # column-major, 2 bytes per column (16 rows)
+
+# Screen row of the font baseline.
+# With wenquanyi_10pt (FONT_ASCENT=12, CJK BBX 12×12 y_off=-1):
+#   CJK glyphs → screen rows 1-12 (aligned to gFontBig ASCII rows 3-12)
+BASELINE_SCREEN_ROW = 11
 
 # Font header constants — must match ui/helper.c
 CJK_FONT_MAGIC = 0x4B36  # 'K','6' little-endian
@@ -71,35 +80,6 @@ def _crc16(data: bytes) -> int:
 # ---------------------------------------------------------------------------
 
 
-def extract_codepoints_from_c_source(path: str) -> set:
-    """Return the set of Unicode codepoints present in UTF-8 string literals
-    inside the given C source file."""
-    try:
-        with open(path, encoding="utf-8", errors="replace") as f:
-            text = f.read()
-    except FileNotFoundError:
-        return set()
-
-    codepoints = set()
-    # Match C string literals (simple heuristic — not a full C parser)
-    for m in re.finditer(r'"((?:[^"\\]|\\.)*)"', text):
-        s = m.group(1)
-        # Decode escape sequences  \\xHH
-        try:
-            raw = bytes(s, "utf-8").decode("unicode_escape").encode("latin1")
-            decoded = raw.decode("utf-8", errors="replace")
-        except Exception:
-            try:
-                decoded = s
-            except Exception:
-                continue
-        for ch in decoded:
-            cp = ord(ch)
-            if 0x4E00 <= cp <= 0x9FFF:  # CJK Unified Ideographs
-                codepoints.add(cp)
-    return codepoints
-
-
 def collect_codepoints(src_dir: str, chars_file: str | None) -> list:
     """Collect all needed CJK codepoints, sorted."""
     cps = set()
@@ -112,9 +92,16 @@ def collect_codepoints(src_dir: str, chars_file: str | None) -> list:
     else:
         for fname in ["ui/menu_lang.c", "ui/menu_sub_values_cn.c", "ui/menu.c"]:
             full = os.path.join(src_dir, fname)
-            found = extract_codepoints_from_c_source(full)
-            cps |= found
-            print(f"  {fname}: {len(found)} CJK codepoints", file=sys.stderr)
+            before = len(cps)
+            try:
+                with open(full, encoding="utf-8", errors="replace") as f:
+                    for ch in f.read():
+                        cp = ord(ch)
+                        if 0x4E00 <= cp <= 0x9FFF:
+                            cps.add(cp)
+            except FileNotFoundError:
+                pass
+            print(f"  {fname}: {len(cps) - before} new CJK codepoints", file=sys.stderr)
 
     result = sorted(cps)
     print(f"Total unique CJK codepoints: {len(result)}", file=sys.stderr)
@@ -122,82 +109,88 @@ def collect_codepoints(src_dir: str, chars_file: str | None) -> list:
 
 
 # ---------------------------------------------------------------------------
-# Glyph rendering
+# BDF font parsing and glyph rendering
 # ---------------------------------------------------------------------------
 
 
-def find_system_font() -> str | None:
-    """Try to locate a suitable CJK TrueType font on the system."""
-    candidates = [
-        # Linux
-        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/noto-cjk/NotoSansCJKsc-Regular.otf",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        # macOS
-        "/System/Library/Fonts/PingFang.ttc",
-        "/Library/Fonts/Arial Unicode MS.ttf",
-        # Windows
-        r"C:\Windows\Fonts\simsun.ttc",
-        r"C:\Windows\Fonts\msyh.ttc",
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            return p
-    return None
+def parse_bdf_file(path: str) -> dict:
+    """Parse a BDF font file.
+    Returns dict: {codepoint: {'bbx': (w,h,x_off,y_off), 'bitmap': [int, ...]}}
+    Each bitmap entry is one row (top→bottom), stored as an integer with MSB=left.
+    """
+    chars = {}
+    with open(path, encoding="utf-8", errors="replace") as f:
+        lines = f.readlines()
+
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith("STARTCHAR"):
+            encoding = None
+            bbx = None
+            bitmap: list[int] = []
+            i += 1
+            while i < len(lines) and lines[i].strip() != "ENDCHAR":
+                tok = lines[i].strip()
+                if tok.startswith("ENCODING"):
+                    encoding = int(tok.split()[1])
+                elif tok.startswith("BBX"):
+                    parts = tok.split()
+                    bbx = (int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4]))
+                elif tok.startswith("BITMAP"):
+                    i += 1
+                    while i < len(lines) and lines[i].strip() != "ENDCHAR":
+                        hex_row = lines[i].strip()
+                        if hex_row and all(c in "0123456789ABCDEFabcdef" for c in hex_row):
+                            bitmap.append(int(hex_row, 16))
+                        i += 1
+                    break
+                i += 1
+            if encoding is not None and bbx is not None:
+                chars[encoding] = {"bbx": bbx, "bitmap": bitmap}
+        i += 1
+    return chars
 
 
-def render_glyph_pillow(font_path: str, codepoint: int, size: int) -> bytes | None:
-    """Render a single glyph using Pillow + freetype-py / ImageFont.
-    Returns 24 bytes in column-major format, or None on failure."""
-    try:
-        from PIL import Image, ImageDraw, ImageFont
-    except ImportError:
-        print("ERROR: Pillow not installed.  Run: pip install Pillow", file=sys.stderr)
-        sys.exit(1)
+def render_glyph_bdf(bdf_chars: dict, codepoint: int) -> bytes:
+    """Render a single CJK glyph from BDF data into column-major format.
 
-    char = chr(codepoint)
-    try:
-        pil_font = ImageFont.truetype(font_path, size)
-    except Exception as e:
-        print(f"ERROR loading font {font_path}: {e}", file=sys.stderr)
-        sys.exit(1)
+    BDF baseline placement:
+      screen_row = BASELINE_SCREEN_ROW - bbx_y_off - bbx_h + 1 + bdf_bitmap_row
+    With BASELINE_SCREEN_ROW=11 and wenquanyi_10pt CJK (bbx_y=-1, bbx_h=12):
+      glyph occupies screen rows 1-12, matching gFontBig ASCII at rows 3-12.
+    """
+    if codepoint not in bdf_chars:
+        return bytes(BYTES_PER_GLYPH)
 
-    # Render onto a small bitmap
-    img = Image.new("1", (GLYPH_WIDTH, GLYPH_HEIGHT), 0)
-    draw = ImageDraw.Draw(img)
+    entry = bdf_chars[codepoint]
+    bbx_w, bbx_h, bbx_x, bbx_y = entry["bbx"]
+    bitmap = entry["bitmap"]
 
-    # Get bounding box to centre the glyph
-    try:
-        bbox = pil_font.getbbox(char)
-        gw = bbox[2] - bbox[0]
-        gh = bbox[3] - bbox[1]
-        x_off = (GLYPH_WIDTH - gw) // 2 - bbox[0]
-        y_off = (GLYPH_HEIGHT - gh) // 2 - bbox[1]
-    except Exception:
-        x_off, y_off = 0, 0
+    # BDF rows are padded to byte boundaries; total bits per row:
+    row_total_bits = ((bbx_w + 7) // 8) * 8
 
-    draw.text((x_off, y_off), char, font=pil_font, fill=1)
-
-    # Convert to column-major bytes
     result = bytearray(BYTES_PER_GLYPH)
-    for col in range(GLYPH_WIDTH):
-        lo = 0
-        hi = 0
-        for row in range(8):
-            if img.getpixel((col, row)):
-                lo |= 1 << row
-        for row in range(8, GLYPH_HEIGHT):
-            if img.getpixel((col, row)):
-                hi |= 1 << (row - 8)
-        result[col * 2 + 0] = lo
-        result[col * 2 + 1] = hi
+    for bdf_row, row_val in enumerate(bitmap):
+        screen_row = BASELINE_SCREEN_ROW - bbx_y - bbx_h + 1 + bdf_row
+        if not (0 <= screen_row < GLYPH_HEIGHT):
+            continue
+        for bdf_col in range(bbx_w):
+            # MSB of the padded row = leftmost pixel
+            bit_pos = row_total_bits - 1 - bdf_col
+            if not ((row_val >> bit_pos) & 1):
+                continue
+            screen_col = bbx_x + bdf_col
+            if not (0 <= screen_col < GLYPH_WIDTH):
+                continue
+            byte_idx = screen_col * 2 + (screen_row // 8)
+            result[byte_idx] |= 1 << (screen_row % 8)
+
     return bytes(result)
 
 
 def preview_glyph(glyph: bytes, char: str) -> None:
-    """Print an ASCII-art preview of a 12×16 glyph."""
+    """Print an ASCII-art preview of a 13×16 glyph."""
     print(f"U+{ord(char):04X} '{char}'")
     for row in range(GLYPH_HEIGHT):
         line = ""
@@ -254,17 +247,20 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     src_dir = os.path.dirname(script_dir)  # parent = firmware root
 
+    default_bdf = os.path.join(script_dir, "wenquanyi_10pt.bdf")
+
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--font", default=None, help="TrueType/OTF font file path")
+    parser.add_argument(
+        "--bdf",
+        default=default_bdf,
+        help="BDF bitmap font file (default: tools/wenquanyi_10pt.bdf)",
+    )
     parser.add_argument(
         "--out",
         default=os.path.join(script_dir, "cjk_font.bin"),
         help="Output binary file (default: tools/cjk_font.bin)",
-    )
-    parser.add_argument(
-        "--size", type=int, default=12, help="Render size in pixels (default: 12)"
     )
     parser.add_argument(
         "--chars", default=None, help="Text file with characters to include"
@@ -274,16 +270,19 @@ def main():
     )
     args = parser.parse_args()
 
-    # Find font
-    font_path = args.font or find_system_font()
-    if not font_path:
-        print("ERROR: No CJK font found.  Specify one with --font.", file=sys.stderr)
+    if not os.path.exists(args.bdf):
+        print(f"ERROR: BDF font not found: {args.bdf}", file=sys.stderr)
         print(
-            "  Suggested: apt install fonts-wqy-microhei  (Debian/Ubuntu)",
+            "  Copy wenquanyi_10pt.bdf into tools/ or specify --bdf PATH",
             file=sys.stderr,
         )
         sys.exit(1)
-    print(f"Using font: {font_path}", file=sys.stderr)
+    print(f"BDF font : {args.bdf}", file=sys.stderr)
+
+    # Parse BDF
+    print("Parsing BDF font...", file=sys.stderr)
+    bdf_chars = parse_bdf_file(args.bdf)
+    print(f"BDF contains {len(bdf_chars)} glyphs", file=sys.stderr)
 
     # Collect codepoints
     codepoints = collect_codepoints(src_dir, args.chars)
@@ -293,19 +292,19 @@ def main():
 
     # Render glyphs
     glyphs = []
-    failed = 0
+    missing = []
     for cp in codepoints:
-        g = render_glyph_pillow(font_path, cp, args.size)
-        if g is None:
-            g = bytes(BYTES_PER_GLYPH)  # blank glyph
-            failed += 1
+        if cp not in bdf_chars:
+            missing.append(chr(cp))
+        g = render_glyph_bdf(bdf_chars, cp)
         glyphs.append(g)
         if args.preview:
             preview_glyph(g, chr(cp))
 
-    if failed:
+    if missing:
         print(
-            f"WARNING: {failed} glyph(s) could not be rendered (blank substituted).",
+            f"WARNING: {len(missing)} codepoint(s) missing from BDF "
+            f"(blank substituted): {''.join(missing)}",
             file=sys.stderr,
         )
 

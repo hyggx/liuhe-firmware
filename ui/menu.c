@@ -410,7 +410,11 @@ int     edit_index;
 
 void UI_DisplayMenu(void)
 {
-	const unsigned int menu_list_width = 6; // max no. of characters on the menu list (left side)
+#ifdef ENABLE_CHINESE
+	const unsigned int menu_list_width = (gUiLanguage == UI_LANGUAGE_CN) ? 7 : 6;
+#else
+	const unsigned int menu_list_width = 6;
+#endif
 	const unsigned int menu_item_x1    = (8 * menu_list_width) + 2;
 	const unsigned int menu_item_x2    = LCD_WIDTH - 1;
 	unsigned int       i;
@@ -671,7 +675,12 @@ void UI_DisplayMenu(void)
 			if (valid && !gAskForConfirmation)
 			{	// show the frequency so that the user knows the channels frequency
 				const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
-				sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
+				#ifdef ENABLE_CHINESE
+				if (gUiLanguage == UI_LANGUAGE_CN)
+					sprintf(String, "%u.%04u", frequency / 100000, (frequency % 100000) / 10);
+				else
+				#endif
+					sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
 				UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
 			}
 
@@ -707,7 +716,12 @@ void UI_DisplayMenu(void)
 
 				if (!gAskForConfirmation)
 				{	// show the frequency so that the user knows the channels frequency
-					sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
+					#ifdef ENABLE_CHINESE
+					if (gUiLanguage == UI_LANGUAGE_CN)
+						sprintf(String, "%u.%04u", frequency / 100000, (frequency % 100000) / 10);
+					else
+					#endif
+						sprintf(String, "%u.%05u", frequency / 100000, frequency % 100000);
 					UI_PrintString(String, menu_item_x1, menu_item_x2, 4 + (gIsInSubMenu && edit_index >= 0), 8);
 				}
 			}
@@ -826,7 +840,10 @@ void UI_DisplayMenu(void)
 
 #ifdef ENABLE_CHINESE
 		case MENU_LANGUAGE:
-			strcpy(String, gSubMenu_LANGUAGE[gSubMenuSelection]);
+			if (gSubMenuSelection == UI_LANGUAGE_CN)
+				strcpy(String, SUBV("Chinese", gSubMenu_LANGUAGE[UI_LANGUAGE_CN]));
+			else
+				strcpy(String, gSubMenu_LANGUAGE[gSubMenuSelection]);
 			break;
 #endif
 
