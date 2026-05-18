@@ -513,19 +513,13 @@ void UI_DisplayMenu(void)
 
 		case MENU_OFFSET:
 			if (!gIsInSubMenu || gInputBoxIndex == 0)
-			{
-				sprintf(String, "%3d.%05u", gSubMenuSelection / 100000, abs(gSubMenuSelection) % 100000);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
-			}
+				sprintf(String, "%3d.%05u MHz", gSubMenuSelection / 100000, abs(gSubMenuSelection) % 100000);
 			else
 			{
 				const char * ascii = INPUTBOX_GetAscii();
-				sprintf(String, "%.3s.%.3s  ",ascii, ascii + 3);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 3, 8);
+				sprintf(String, "%.3s.%.3s MHz", ascii, ascii + 3);
 			}
-
-			UI_PrintString("MHz",  menu_item_x1, menu_item_x2, 5, 8);
-
+			UI_PrintString(String, menu_item_x1, menu_item_x2, 4, 8);
 			already_printed = true;
 			break;
 
@@ -919,12 +913,12 @@ void UI_DisplayMenu(void)
 
 			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH1[i])) {
 				sprintf(String, "PRI%d:%u", 1, gEeprom.SCANLIST_PRIORITY_CH1[i] + 1);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 5, 8);
+				UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 5);
 			}
 
 			if (IS_MR_CHANNEL(gEeprom.SCANLIST_PRIORITY_CH2[i])) {
 				sprintf(String, "PRI%d:%u", 2, gEeprom.SCANLIST_PRIORITY_CH2[i] + 1);
-				UI_PrintString(String, menu_item_x1, menu_item_x2, 6, 8);
+				UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
 			}
 		}
 	}
@@ -957,18 +951,14 @@ void UI_DisplayMenu(void)
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_CH   ||
 	     UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME ||
 	     UI_MENU_GetCurrentMenuId() == MENU_DEL_CH) && gAskForConfirmation)
-	{	// display confirmation in value area center
+	{	// display confirmation below channel content (pages 6-7)
 		char *pPrintStr = (gAskForConfirmation == 1) ? "SURE?" : "WAIT!";
-		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 3, 8);
+		UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 6, 8);
 	}
 
-	// Edit mode indicator: invert the entire value area (pages 2-7) when in submenu
+	// Edit mode indicator: small right-arrow at top-left of value area
 	if (gIsInSubMenu)
-	{
-		for (i = 2; i < 8; i++)
-			for (unsigned int col = 0; col < LCD_WIDTH; col++)
-				gFrameBuffer[i][col] ^= 0xFF;
-	}
+		memcpy(gFrameBuffer[2], BITMAP_CurrentIndicator, sizeof(BITMAP_CurrentIndicator));
 
 	ST7565_BlitFullScreen();
 }

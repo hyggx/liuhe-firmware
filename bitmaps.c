@@ -313,7 +313,6 @@ const uint8_t BITMAP_compand[6] =
 	0b00100100
 };
 
-#ifndef ENABLE_CUSTOM_MENU_LAYOUT
 const uint8_t BITMAP_CurrentIndicator[8] = {
 	0xFF,
 	0xFF,
@@ -324,4 +323,3 @@ const uint8_t BITMAP_CurrentIndicator[8] = {
 	0x18,
 	0x18
 };
-#endif
