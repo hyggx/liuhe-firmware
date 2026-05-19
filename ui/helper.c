@@ -428,10 +428,14 @@ void UI_PrintStringMixed(const char *pString, uint8_t Start, uint8_t End, uint8_
 			}
 			x += CJK_GLYPH_WIDTH;
 		} else if (cp > ' ' && cp < 127u) {
-			/* ASCII printable using gFontBig (7 bytes per column-slice × 2 pages) */
-			const unsigned int index = (unsigned int)(cp - ' ' - 1u);
-			memcpy(gFrameBuffer[Line + 0] + x, &gFontBig[index][0], 7);
-			memcpy(gFrameBuffer[Line + 1] + x, &gFontBig[index][7], 7);
+			/* ASCII printable using gFontBig (7 bytes per column-slice × 2 pages).
+			 * Guard against overflowing the 128-byte framebuffer row: each glyph
+			 * writes 7 bytes, so the start column must satisfy x + 7 <= 128. */
+			if (x + 7u <= 128u) {
+				const unsigned int index = (unsigned int)(cp - ' ' - 1u);
+				memcpy(gFrameBuffer[Line + 0] + x, &gFontBig[index][0], 7);
+				memcpy(gFrameBuffer[Line + 1] + x, &gFontBig[index][7], 7);
+			}
 			x += ASCII_GLYPH_WIDTH;
 		} else {
 			x += ASCII_GLYPH_WIDTH; /* space / unknown */

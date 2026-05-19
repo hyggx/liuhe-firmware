@@ -41,10 +41,9 @@ void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size)
 
 void EEPROM_WriteBuffer(uint16_t Address, const void *pBuffer)
 {
-	/* AT24C512 is 64 KB (0x0000-0xFFFF). Each call writes exactly 8 bytes,
-	 * so Address must be <= 0xFFF8 to stay within the chip.
-	 * Raised from the old 8 KB cap (0x1FF8) so the CJK font region
-	 * (0x2000-0xFFFF) can be written by the flash_font.py upload tool. */
+	/* Physical chip is 512 KB but current driver only reaches the first 64 KB
+	 * (page 0, device byte 0xA0).  Guard uses EEPROM_SIZE = 0x10000 (page 0
+	 * limit) until the driver is extended to support multi-page addressing. */
 	if (pBuffer == NULL || Address > (uint16_t)(EEPROM_SIZE - 8u))
 		return;
 

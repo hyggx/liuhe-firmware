@@ -19,9 +19,21 @@
 
 #include <stdint.h>
 
-/* AT24C512: 64 KB, addresses 0x0000-0xFFFF.
- * Settings occupy 0x0000-0x1FFF; CJK font starts at 0x2000. */
-#define EEPROM_SIZE       0x10000u
+/* Physical chip: 512 KB external I2C EEPROM (community "V1" UV-K6 big-memory PCB).
+ *
+ * WARNING – the current driver uses uint16_t addresses and a fixed I2C device
+ * byte (0xA0), so it can only reach the first 64 KB (page 0, 0x0000-0xFFFF).
+ * EEPROM_SIZE reflects this accessible window, not the full chip capacity.
+ * To unlock the remaining 448 KB the driver must be extended to encode the
+ * three page-select bits into the I2C device byte and widen addresses to
+ * uint32_t.
+ *
+ * Current layout (64 KB window):
+ *   0x0000 – 0x1FFF  radio settings / channels
+ *   0x2000 – 0xFFFF  CJK font data
+ */
+#define EEPROM_SIZE       0x10000u   /* currently accessible: 64 KB (page 0) */
+#define EEPROM_FULL_SIZE  0x80000u   /* physical chip capacity: 512 KB        */
 #define EEPROM_FONT_BASE  0x2000u
 
 void EEPROM_ReadBuffer(uint16_t Address, void *pBuffer, uint8_t Size);

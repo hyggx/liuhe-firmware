@@ -320,6 +320,16 @@ static void CMD_051D(const uint8_t *pBuffer)
 
 	bIsLocked = bHasCustomAesKey ? gIsLocked : bHasCustomAesKey;
 
+	/* Reject frames where the payload Size field is internally inconsistent.
+	 * pCmd->Header.Size (CRC-verified) must be at least 8 (fixed fields) +
+	 * pCmd->Size (claimed data bytes).  Without this check a crafted frame can
+	 * set Header.Size small but pCmd->Size large, causing the write loop to
+	 * read pCmd->Data[] past the end of the 256-byte UART_Command.Buffer. */
+	if (pCmd->Header.Size < 8u + (uint16_t)pCmd->Size ||
+	    pCmd->Size % 8u != 0u ||
+	    pCmd->Size > 128u)
+		return;
+
 	/* [hyggx fix] Verify the entire write range lies within the 64 KB AT24C512.
 	 * 0x0000-0x1FFF = radio settings; 0x2000-0xFFFF = CJK font region.
 	 * Without this guard an adversary could craft an Offset that wraps the
