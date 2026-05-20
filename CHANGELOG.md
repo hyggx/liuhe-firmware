@@ -9,6 +9,39 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Feature — T9 multi-tap channel name input method (2026-05-20, `dev`)
+
+Flash budget: `text 60 420 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`app/menu.c` — T9 multi-tap IME for channel name editing** —
+  Channel names can now be entered with a full T9 multi-tap input method,
+  matching the ergonomics of classic mobile phone text entry.
+
+  **Key mapping:**
+
+  | Key | Characters |
+  |-----|-----------|
+  | `2` | 2 A B C |
+  | `3` | 3 D E F |
+  | `4` | 4 G H I |
+  | `5` | 5 J K L |
+  | `6` | 6 M N O |
+  | `7` | 7 P Q R S |
+  | `8` | 8 T U V |
+  | `9` | 9 W X Y Z |
+  | `1` | 1 - . |
+  | `0` | 0 (space) |
+
+  **Operation:**
+  - Press the same digit repeatedly to cycle through its characters.
+  - After 1.5 s idle the character is locked; press again to start a new one.
+  - **Short press MENU** — confirm current character and advance cursor.
+  - **Long press MENU** — save immediately from any cursor position → shows SURE? confirmation.
+  - **EXIT (pos > 0)** — backspace: erase current position and step back.
+  - **EXIT (pos = 0)** — cancel edit and restore the original channel name.
+  - **`F` key** — toggle uppercase / lowercase (default: uppercase on entry).
+  - **`*` key** — insert `-` and advance cursor.
+
 ### Fixed — FM radio audio pop/crack on channel switch (2026-05-18, `main`)
 
 - **`audio.c` `AUDIO_PlayBeep` — BK1080 unmute sequencing corrected** —
