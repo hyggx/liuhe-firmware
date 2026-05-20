@@ -54,17 +54,19 @@ uint8_t gUnlockAllTxConfCnt;
 //   • Digit press         → cycle chars at current cursor position; reset timer
 //   • Different digit     → start new T9 cycle at same cursor position
 //   • Timer (1.5 s) fires → just lock the character in place; cursor stays
-//   • MENU press          → confirm current char, advance cursor one step
-//   • EXIT press          → backspace (pos>0) or cancel edit (pos==0)
-//   • ↑/↓                 → fine-scroll any ASCII char at current position
+//   • Short MENU          → confirm current char, advance cursor one step
+//   • Long  MENU          → save immediately (any position) → SURE?
+//   • EXIT (pos>0)        → backspace
+//   • EXIT (pos=0)        → cancel, restore original name
+//   • F key               → toggle uppercase/lowercase
 //   • * key               → insert '-'
-//   • F key               → insert space
+//   • KEY_0               → cycles '0' and space (' ')
 // ---------------------------------------------------------------------------
 #define T9_TIMEOUT_10MS  150u  // 1.5 s idle → lock character, stay on position
 
 static const char * const t9_chars[10] = {
-	"0 ",    // KEY_0
-	"1-.",   // KEY_1
+	"0 ",    // KEY_0: digit 0, space
+	"1-.",   // KEY_1: digit 1, dash, dot
 	"2ABC",  // KEY_2
 	"3DEF",  // KEY_3
 	"4GHI",  // KEY_4
@@ -75,15 +77,24 @@ static const char * const t9_chars[10] = {
 	"9WXYZ", // KEY_9
 };
 
-static int8_t   t9_last_key = -1;  // active digit key index, -1 = idle
-static uint8_t  t9_char_idx = 0;   // current position within t9_chars[t9_last_key]
-static uint16_t t9_timer    = 0;   // countdown in 10 ms ticks; 0 = no pending T9
+static int8_t   t9_last_key  = -1;   // active digit key index, -1 = idle
+static uint8_t  t9_char_idx  = 0;    // current position within t9_chars[t9_last_key]
+static uint16_t t9_timer     = 0;    // countdown in 10 ms ticks; 0 = no pending T9
+static bool     t9_uppercase = true; // case state; F key toggles
 
 // Clear T9 pending state without moving the cursor.
 static void t9_reset(void)
 {
 	t9_last_key = -1;
 	t9_timer    = 0;
+}
+
+// Return c with case applied (only affects A-Z / a-z).
+static char t9_apply_case(char c)
+{
+	if (c >= 'A' && c <= 'Z' && !t9_uppercase) return c + 32;
+	if (c >= 'a' && c <= 'z' &&  t9_uppercase) return c - 32;
+	return c;
 }
 
 #ifdef ENABLE_F_CAL_MENU
@@ -1248,7 +1259,7 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				t9_last_key = ki;
 			}
 			t9_timer         = T9_TIMEOUT_10MS;
-			edit[edit_index] = chars[t9_char_idx];
+			edit[edit_index] = t9_apply_case(chars[t9_char_idx]);
 			gRequestDisplayScreen = DISPLAY_MENU;
 		}
 		return;
@@ -1520,6 +1531,7 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 				edit[edit_index++] = '_';
 			edit[edit_index] = 0;
 			edit_index = 0;  // 'edit_index' is going to be used as the cursor position
+			t9_uppercase = true;  // default to uppercase on each new edit session
 
 			// make a copy so we can test for change when exiting the menu item
 			memcpy(edit_original, edit, sizeof(edit_original));
@@ -1784,18 +1796,14 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			break;
 		case KEY_F:
 			if (UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME && edit_index >= 0)
-			{	// currently editing the channel name
+			{	// F key toggles uppercase/lowercase during channel name editing
 				if (!bKeyHeld && bKeyPressed)
 				{
-					gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
-					if (edit_index < 10)
-					{
-						edit[edit_index] = ' ';
-						if (++edit_index >= 10)
-						{	// exit edit
-							gFlagAcceptSetting  = false;
-							gAskForConfirmation = 1;
-						}
+					gBeepToPlay  = BEEP_1KHZ_60MS_OPTIONAL;
+					t9_uppercase = !t9_uppercase;
+					// apply new case to the character already at current position
+					if (edit_index < 10) {
+						edit[edit_index] = t9_apply_case(edit[edit_index]);
 						gRequestDisplayScreen = DISPLAY_MENU;
 					}
 				}
