@@ -48,6 +48,44 @@
 
 uint8_t gUnlockAllTxConfCnt;
 
+// ---------------------------------------------------------------------------
+// T9 multi-tap input for channel-name editing
+// Rules:
+//   • Digit press         → cycle chars at current cursor position; reset timer
+//   • Different digit     → start new T9 cycle at same cursor position
+//   • Timer (1.5 s) fires → just lock the character in place; cursor stays
+//   • MENU press          → confirm current char, advance cursor one step
+//   • EXIT press          → backspace (pos>0) or cancel edit (pos==0)
+//   • ↑/↓                 → fine-scroll any ASCII char at current position
+//   • * key               → insert '-'
+//   • F key               → insert space
+// ---------------------------------------------------------------------------
+#define T9_TIMEOUT_10MS  150u  // 1.5 s idle → lock character, stay on position
+
+static const char * const t9_chars[10] = {
+	"0 ",    // KEY_0
+	"1-.",   // KEY_1
+	"2ABC",  // KEY_2
+	"3DEF",  // KEY_3
+	"4GHI",  // KEY_4
+	"5JKL",  // KEY_5
+	"6MNO",  // KEY_6
+	"7PQRS", // KEY_7
+	"8TUV",  // KEY_8
+	"9WXYZ", // KEY_9
+};
+
+static int8_t   t9_last_key = -1;  // active digit key index, -1 = idle
+static uint8_t  t9_char_idx = 0;   // current position within t9_chars[t9_last_key]
+static uint16_t t9_timer    = 0;   // countdown in 10 ms ticks; 0 = no pending T9
+
+// Clear T9 pending state without moving the cursor.
+static void t9_reset(void)
+{
+	t9_last_key = -1;
+	t9_timer    = 0;
+}
+
 #ifdef ENABLE_F_CAL_MENU
 	void writeXtalFreqCal(const int32_t value, const bool update_eeprom)
 	{
@@ -1195,24 +1233,24 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 	gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 
 	if (UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME && edit_index >= 0)
-	{	// currently editing the channel name
+	{	// T9 multi-tap channel name input
+		if (edit_index < 10 && Key <= KEY_9) {
+			const int8_t  ki     = (int8_t)(Key - KEY_0);
+			const char   *chars  = t9_chars[ki];
+			const uint8_t nchars = (uint8_t)strlen(chars);
 
-		if (edit_index < 10)
-		{
-			if (Key <= KEY_9)
-			{
-				edit[edit_index] = '0' + Key - KEY_0;
-
-				if (++edit_index >= 10)
-				{	// exit edit
-					gFlagAcceptSetting  = false;
-					gAskForConfirmation = 1;
-				}
-
-				gRequestDisplayScreen = DISPLAY_MENU;
+			if (t9_last_key == ki && t9_timer > 0) {
+				// same key again — cycle to next character in this key's set
+				t9_char_idx = (t9_char_idx + 1) % nchars;
+			} else {
+				// different key (or T9 was idle) — start fresh at current position
+				t9_char_idx = 0;
+				t9_last_key = ki;
 			}
+			t9_timer         = T9_TIMEOUT_10MS;
+			edit[edit_index] = chars[t9_char_idx];
+			gRequestDisplayScreen = DISPLAY_MENU;
 		}
-
 		return;
 	}
 
@@ -1350,6 +1388,27 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 		   just in case we are exiting from one of them. */
 		BACKLIGHT_TurnOn();
 
+		// Special case: EXIT = backspace when editing a channel name
+		if (gIsInSubMenu &&
+		    UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME &&
+		    edit_index >= 0)
+		{
+			t9_reset();
+			if (edit_index > 0) {
+				// backspace: erase current position then step back
+				edit[edit_index] = '_';
+				edit_index--;
+			} else {
+				// cancel: restore original name and leave edit mode
+				memcpy(edit, edit_original, sizeof(edit));
+				edit_index          = -1;
+				gIsInSubMenu        = false;
+				gAskForConfirmation = 0;
+			}
+			gRequestDisplayScreen = DISPLAY_MENU;
+			return;
+		}
+
 		if (gIsInSubMenu)
 		{
 			if (gInputBoxIndex == 0 || UI_MENU_GetCurrentMenuId() != MENU_OFFSET)
@@ -1460,6 +1519,10 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 		else
 		if (edit_index >= 0 && edit_index < 10)
 		{	// editing the channel name characters
+
+			// commit any pending T9 character before advancing cursor
+			t9_last_key = -1;
+			t9_timer    = 0;
 
 			if (++edit_index < 10)
 				return;	// next char
@@ -1755,4 +1818,13 @@ void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 			gMenuCountdown = menu_timeout_500ms;
 		}
 	}
+}
+
+void MENU_TimeSlice10ms(void)
+{
+	if (t9_timer == 0 || edit_index < 0 ||
+	    UI_MENU_GetCurrentMenuId() != MENU_MEM_NAME)
+		return;
+	if (--t9_timer == 0)
+		t9_reset();  // lock char in place; cursor stays; user presses MENU to advance
 }
