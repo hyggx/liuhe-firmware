@@ -1458,7 +1458,17 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 
 static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 {
-	if (bKeyHeld || !bKeyPressed)
+	// Long-press MENU during channel name edit: save immediately at current position
+	if (bKeyHeld && bKeyPressed &&
+	    gIsInSubMenu &&
+	    UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME &&
+	    edit_index >= 0 && edit_index < 10)
+	{
+		t9_reset();
+		edit_index = 10;  // jump to end → SURE? flow below
+		// fall through
+	}
+	else if (bKeyHeld || !bKeyPressed)
 		return;
 
 	gBeepToPlay           = BEEP_1KHZ_60MS_OPTIONAL;
