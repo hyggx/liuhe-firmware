@@ -46,9 +46,8 @@ ENABLE_BLMIN_TMP_OFF          ?= 0
 ENABLE_SCAN_RANGES            ?= 1
 # Requires CJK font binary written to EEPROM 0x2000 (run tools/gen_cjk_font.py first)
 ENABLE_CHINESE                ?= 1
-# CJK renderer adds ~1.4 KB; automatically free budget by disabling some features
+# CJK renderer adds ~1.4 KB; automatically free budget by disabling VOX
 ifeq ($(ENABLE_CHINESE),1)
-ENABLE_FLASHLIGHT             := 0
 ENABLE_VOX                    := 0
 endif
 

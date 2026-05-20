@@ -617,12 +617,7 @@ void UI_DisplayMenu(void)
 				if (valid)
 				{
 					const uint32_t frequency = SETTINGS_FetchChannelFrequency(gSubMenuSelection);
-					#ifdef ENABLE_CHINESE
-					if (gUiLanguage == UI_LANGUAGE_CN)
-						sprintf(String, "%u.%04u MHz", frequency / 100000, (frequency % 100000) / 10);
-					else
-					#endif
-						sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
+					sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
 					UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
 				}
 			}
@@ -662,12 +657,7 @@ void UI_DisplayMenu(void)
 				}
 
 				// Line 3: frequency small font (page 6 only)
-				#ifdef ENABLE_CHINESE
-				if (gUiLanguage == UI_LANGUAGE_CN)
-					sprintf(String, "%u.%04u MHz", frequency / 100000, (frequency % 100000) / 10);
-				else
-				#endif
-					sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
+				sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
 				UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
 			}
 			// When gAskForConfirmation: only CH# shown; SURE?/WAIT! drawn below
