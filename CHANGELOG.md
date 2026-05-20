@@ -9,6 +9,23 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### Fixed — Flashlight re-enabled in CN build; frequency decimal precision (2026-05-20, `dev`)
+
+Flash budget: `text 60 608 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`Makefile` — flashlight no longer auto-disabled in Chinese builds** —
+  The `ifeq ($(ENABLE_CHINESE),1)` block previously forced `ENABLE_FLASHLIGHT := 0`
+  to save flash space; this silently removed the torch/SOS function when building
+  with Chinese localisation.  The line is removed; `ENABLE_FLASHLIGHT` defaults to
+  `1` and can still be overridden on the command line.  VOX auto-disable is kept
+  (saves ~400 B to offset the ~208 B flashlight cost).
+
+- **`ui/menu.c` — frequency display always uses 5-decimal format** —
+  Memory-channel cases (`MENU_MEM_CH`, `MENU_MEM_CH_DEL`, `MENU_1_CALL`,
+  `MENU_MEM_NAME`) previously used a 4-digit `%u.%04u MHz` format inside
+  `#ifdef ENABLE_CHINESE` guards, producing e.g. `435.0000 MHz` instead of
+  `435.00000 MHz`.  All paths now use `%u.%05u MHz` unconditionally.
+
 ### Feature — T9 multi-tap channel name input method (2026-05-20, `dev`)
 
 Flash budget: `text 60 420 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
