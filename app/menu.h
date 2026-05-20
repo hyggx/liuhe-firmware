@@ -34,5 +34,7 @@ void MENU_StopCssScan(void);
 
 void MENU_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 
+void MENU_TimeSlice10ms(void);
+
 #endif
 
