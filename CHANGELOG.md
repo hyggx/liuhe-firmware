@@ -9,7 +9,11 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
-### UI — CN menu label corrections (2026-05-21, `dev`)
+---
+
+## [0.4.0] — 2026-05-21
+
+### UI — CN menu label corrections (2026-05-21, `main`)
 
 Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
@@ -47,7 +51,12 @@ Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
   CJK font regenerated: 153 glyphs (+2 new chars 加入).
 
-### Feature — Channel name editor (`MEM_NAME`) overhaul; `MEM_CH` confirmation UX (2026-05-21, `dev`)
+- **`ui/menu_lang.c` — ROGER label: `Roger音` → `发送结束音` (发送结束音)** —
+  Renamed from the semi-English `Roger音` to the fully-Chinese
+  `发送结束音` (transmission-end beep).
+  CJK font regenerated: 156 glyphs (+3 new chars 送结束).
+
+### Feature — Channel name editor (`MEM_NAME`) overhaul; `MEM_CH` confirmation UX (2026-05-21, `main`)
 
 Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
@@ -80,7 +89,7 @@ Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
   After SURE? confirmation, the second MENU press saves the channel directly
   without an intermediate WAIT! screen, matching the MEM_NAME behaviour.
 
-### Fixed — Flashlight re-enabled in CN build; frequency decimal precision (2026-05-20, `dev`)
+### Fixed — Flashlight re-enabled in CN build; frequency decimal precision (2026-05-20, `main`)
 
 Flash budget: `text 60 608 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
@@ -97,7 +106,7 @@ Flash budget: `text 60 608 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
   `#ifdef ENABLE_CHINESE` guards, producing e.g. `435.0000 MHz` instead of
   `435.00000 MHz`.  All paths now use `%u.%05u MHz` unconditionally.
 
-### Feature — T9 multi-tap channel name input method (2026-05-20, `dev`)
+### Feature — T9 multi-tap channel name input method (2026-05-20, `main`)
 
 Flash budget: `text 60 420 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
