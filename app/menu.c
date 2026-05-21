@@ -1582,9 +1582,10 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 					break;
 
 				case 1:
-					// MEM_NAME / MEM_CH: skip WAIT! — save directly after SURE?
+					// MEM_NAME / MEM_CH / DEL_CH: skip WAIT! — act directly after SURE?
 					if (UI_MENU_GetCurrentMenuId() != MENU_MEM_NAME &&
-					    UI_MENU_GetCurrentMenuId() != MENU_MEM_CH) {
+					    UI_MENU_GetCurrentMenuId() != MENU_MEM_CH  &&
+					    UI_MENU_GetCurrentMenuId() != MENU_DEL_CH) {
 						gAskForConfirmation = 2;
 						UI_DisplayMenu();
 					}
