@@ -928,8 +928,8 @@ void BK4819_SetCompander(const unsigned int mode)
 	//
 	const uint16_t expand_ratio    = (mode >= 2) ? 1 : 0;   // 1:2
 	const uint16_t expand_0dB      = 86;
-	const uint16_t expand_noise_dB = 56;
-//	6B38  01 1010110 0111000
+	const uint16_t expand_noise_dB = 62;
+//	6B3E  01 1010110 0111110
 	BK4819_WriteRegister(BK4819_REG_28, // (BK4819_ReadRegister(BK4819_REG_28) & ~(3u << 14)) | (expand_ratio << 14));
 		(expand_ratio    << 14) |
 		(expand_0dB      <<  7) |

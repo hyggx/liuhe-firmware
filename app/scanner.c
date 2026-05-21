@@ -179,6 +179,7 @@ static void SCANNER_Key_MENU(bool bKeyPressed, bool bKeyHeld)
 		case SCAN_SAVE_CHANNEL:
 			if (!gScanSingleFrequency) {
 				RADIO_InitInfo(gTxVfo, gTxVfo->CHANNEL_SAVE, gScanFrequency);
+				gTxVfo->OUTPUT_POWER = OUTPUT_POWER_HIGH;
 
 				if (gScanUseCssResult) {
 					gTxVfo->freq_config_RX.CodeType = gScanCssResultType;
