@@ -67,7 +67,6 @@ const t_menu_item MenuList[] =
 	{"ScanAdd1", VOICE_ID_INVALID,                     MENU_S_ADD1        }, // was "ScAdd1"
 	{"ScanAdd2", VOICE_ID_INVALID,                     MENU_S_ADD2        }, // was "ScAdd2"
 	{"SaveChan", VOICE_ID_MEMORY_CHANNEL,              MENU_MEM_CH        }, // was "ChSave"
-	{"DelChan", VOICE_ID_DELETE_CHANNEL,               MENU_DEL_CH        }, // was "ChDele"
 	{"ChanName", VOICE_ID_INVALID,                     MENU_MEM_NAME      }, // was "ChName"
 
 	{"ScanList", VOICE_ID_INVALID,                     MENU_S_LIST        }, // was "SList"
@@ -137,6 +136,7 @@ const t_menu_item MenuList[] =
 #ifdef ENABLE_CHINESE
 	{"Language", VOICE_ID_INVALID,                     MENU_LANGUAGE      }, // was "Lang"
 #endif
+	{"DelChan", VOICE_ID_DELETE_CHANNEL,               MENU_DEL_CH        }, // was "ChDele"
 
 	// hidden menu items from here on
 	// enabled if pressing both the PTT and upper side button at power-on
