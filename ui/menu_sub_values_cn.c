@@ -74,10 +74,10 @@ const char gSubMenu_TOT_CN[11][CN_MAX] = {
 };
 
 /* ---- RX mode (dual-watch) ---- */
-/* 仅主频  双守  跨频段  主发收 */
+/* 仅主频  双守候  跨频段  主发收 */
 const char gSubMenu_RXMode_CN[4][10] = {
-    "\xe4\xbb\x85\xe4\xb8\xbb\xe9\xa2\x91", /* 仅主频 */
-    "\xe5\x8f\x8c\xe5\xae\x88",            /* 双守   */
+    "\xe4\xbb\x85\xe4\xb8\xbb\xe9\xa2\x91", /* 仅主频  */
+    "\xe5\x8f\x8c\xe5\xae\x88\xe5\x80\x99", /* 双守候  */
     "\xe8\xb7\xa8\xe9\xa2\x91\xe6\xae\xb5", /* 跨频段 */
     "\xe4\xb8\xbb\xe5\x8f\x91\xe6\x94\xb6", /* 主发收 */
 };
