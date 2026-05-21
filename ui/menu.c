@@ -955,7 +955,7 @@ void UI_DisplayMenu(void)
 		UI_PrintStringSmallNormal(String, 0, 0, 2);
 		// Shift index down 2px to add a small gap from the separator line (same trick as counter)
 		{
-			const uint8_t idx_w = (uint8_t)(strlen(String) * 6u);
+			const uint8_t idx_w = (uint8_t)(strlen(String) * 7u); // char_spacing = char_width(6) + 1
 			for (uint8_t col = 0; col < idx_w; col++) {
 				const uint8_t b = gFrameBuffer[2][col];
 				if (b) {
