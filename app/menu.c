@@ -1248,7 +1248,9 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 				// same key again — cycle to next character in this key's set
 				t9_char_idx = (t9_char_idx + 1) % nchars;
 			} else {
-				// different key (or T9 was idle) — start fresh at current position
+				// different key — commit current char and advance cursor if possible
+				if (t9_last_key >= 0 && t9_timer > 0 && edit_index < 9)
+					edit_index++;	// advance past committed char
 				t9_char_idx = 0;
 				t9_last_key = ki;
 			}
@@ -1506,6 +1508,17 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 		{
 			gInputBoxIndex      = 0;
 			edit_index          = -1;
+		}
+
+		// MEM_NAME: enter edit mode immediately on first MENU press
+		if (UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME) {
+			SETTINGS_FetchChannelName(edit, gSubMenuSelection);
+			edit_index = strlen(edit);
+			while (edit_index < 10)
+				edit[edit_index++] = '_';
+			edit[edit_index] = 0;
+			edit_index = 0;
+			memcpy(edit_original, edit, sizeof(edit_original));
 		}
 
 		return;
