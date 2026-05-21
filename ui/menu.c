@@ -426,12 +426,21 @@ void UI_DisplayMenu(void)
 	{
 		const int menu_index = gMenuCursor;
 
-		// Counter: "N/Total" small font, right-aligned at page 0 (upper-right of title bar)
+		// Counter: "N/Total" small font, right-aligned, vertically centred in 16px title bar.
+		// Render into page 0 first, then shift each column byte down 4px so the 8px-tall
+		// small font sits visually centred between pages 0 and 1: (16-8)/2 = 4px offset.
 		sprintf(String, "%u/%u", 1 + gMenuCursor, gMenuListCount);
 		{
 			const uint8_t idx_len = (uint8_t)strlen(String);
-			const uint8_t idx_x   = LCD_WIDTH - idx_len * 7;  // small font: 6px + 1 spacing = 7px/char
+			const uint8_t idx_x   = (uint8_t)(LCD_WIDTH - idx_len * 7u);
 			UI_PrintStringSmallNormal(String, idx_x, 0, 0);
+			for (uint8_t col = idx_x; col < LCD_WIDTH; col++) {
+				const uint8_t b = gFrameBuffer[0][col];
+				if (b) {
+					gFrameBuffer[0][col] = (uint8_t)(b << 4);
+					gFrameBuffer[1][col] |= (uint8_t)(b >> 4);
+				}
+			}
 		}
 
 		// Title: left-aligned (no centering), big font, page 0
