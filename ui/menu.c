@@ -950,9 +950,9 @@ void UI_DisplayMenu(void)
 #ifdef ENABLE_DTMF_CALLING
 	    || UI_MENU_GetCurrentMenuId() == MENU_D_LIST
 #endif
-	) {
+	) {	// Show list index at left edge of content area (page 2) — avoids title-bar counter overlap
 		sprintf(String, "%2d", gSubMenuSelection);
-		UI_PrintStringSmallNormal(String, LCD_WIDTH - 14, 0, 0);
+		UI_PrintStringSmallNormal(String, 0, 0, 2);
 	}
 
 	if ((UI_MENU_GetCurrentMenuId() == MENU_RESET    ||
