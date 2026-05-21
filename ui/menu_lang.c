@@ -62,7 +62,7 @@ static const char cn_VOICE[]    = "\xe8\xaf\xad\xe9\x9f\xb3";
 /* 扫描1  */ static const char cn_S_ADD1[]  = "\xe6\x89\xab\xe6\x8f\x8f\x31";
 /* 扫描2  */ static const char cn_S_ADD2[]  = "\xe6\x89\xab\xe6\x8f\x8f\x32";
 /* 尾音消除 */static const char cn_STE[]     = "\xe5\xb0\xbe\xe9\x9f\xb3\xe6\xb6\x88\xe9\x99\xa4";
-/* 中继尾消 */static const char cn_RP_STE[]  = "\xe4\xb8\xad\xe7\xbb\xa7\xe5\xb0\xbe\xe6\xb6\x88";
+/* 中继尾音 */static const char cn_RP_STE[]  = "\xe4\xb8\xad\xe7\xbb\xa7\xe5\xb0\xbe\xe9\x9f\xb3";
 /* 麦克增益 */static const char cn_MIC[]     = "\xe9\xba\xa6\xe5\x85\x8b\xe5\xa2\x9e\xe7\x9b\x8a";
 /* 音量条 */ static const char cn_MIC_BAR[] = "\xe9\x9f\xb3\xe9\x87\x8f\xe6\x9d\xa1";
 /* 语音压扩 */static const char cn_COMPAND[]  = "\xe8\xaf\xad\xe9\x9f\xb3\xe5\x8e\x8b\xe6\x89\xa9";
@@ -76,10 +76,10 @@ static const char cn_VOICE[]    = "\xe8\xaf\xad\xe9\x9f\xb3";
 #ifdef ENABLE_NOAA
 static const char cn_NOAA_S[]   = "NOAA";
 #endif
-/* 上行码 */ static const char cn_UPCODE[]  = "\xe4\xb8\x8a\xe8\xa1\x8c\xe7\xa0\x81";
-/* 下行码 */ static const char cn_DWCODE[]  = "\xe4\xb8\x8b\xe8\xa1\x8c\xe7\xa0\x81";
+/* DTMF上行码 */static const char cn_UPCODE[]  = "DTMF\xe4\xb8\x8a\xe8\xa1\x8c\xe7\xa0\x81";
+/* DTMF下行码 */static const char cn_DWCODE[]  = "DTMF\xe4\xb8\x8b\xe8\xa1\x8c\xe7\xa0\x81";
 /* PTT ID*/ static const char cn_PTT_ID[]   = "PTT ID";
-/* DTMF ST */ static const char cn_D_ST[]   = "DTMF ST";
+/* DTMF侧音 */static const char cn_D_ST[]   = "DTMF\xe4\xbe\xa7\xe9\x9f\xb3";
 /* DTMF响应 */
 #ifdef ENABLE_DTMF_CALLING
 static const char cn_D_RSP[]  = "DTMF\xe5\x93\x8d\xe5\xba\x94";
@@ -99,7 +99,7 @@ static const char cn_D_LIST[] = "DTMF\xe8\x81\x94\xe7\xb3\xbb";
 #endif
 /* DTMF直解 */static const char cn_D_LIVE[] = "DTMF\xe7\x9b\xb4\xe8\xa7\xa3";
 /* 开机画面 */static const char cn_PONMSG[]  = "\xe5\xbc\x80\xe6\x9c\xba\xe7\x94\xbb\xe9\x9d\xa2";
-/* 发射尾音 */static const char cn_ROGER[]   = "\xe5\x8f\x91\xe5\xb0\x84\xe5\xb0\xbe\xe9\x9f\xb3";
+/* 确认音   */static const char cn_ROGER[]   = "\xe7\xa1\xae\xe8\xae\xa4\xe9\x9f\xb3";
 /* 电池电压 */static const char cn_VOL[]      = "\xe7\x94\xb5\xe6\xb1\xa0\xe7\x94\xb5\xe5\x8e\x8b";
 /* 电池显示 */static const char cn_BAT_TXT[] = "\xe7\x94\xb5\xe6\xb1\xa0\xe6\x98\xbe\xe7\xa4\xba";
 /* 报警  */
@@ -124,7 +124,7 @@ static const char cn_F_CALI[]  = "\xe9\xa2\x91\xe7\x8e\x87\xe6\xa0\xa1\xe5\x87\x
 /* 键1长按 */static const char cn_F1LONG[]  = "\xe9\x94\xae\x31\xe9\x95\xbf\xe6\x8c\x89";
 /* 键2短按 */static const char cn_F2SHRT[]  = "\xe9\x94\xae\x32\xe7\x9f\xad\xe6\x8c\x89";
 /* 键2长按 */static const char cn_F2LONG[]  = "\xe9\x94\xae\x32\xe9\x95\xbf\xe6\x8c\x89";
-/* MENU长按 */static const char cn_MLONG[]   = "MENU\xe9\x95\xbf\xe6\x8c\x89";
+/* 菜单长按 */static const char cn_MLONG[]   = "\xe8\x8f\x9c\xe5\x8d\x95\xe9\x95\xbf\xe6\x8c\x89";
 /* 电池类型 */static const char cn_BATTYP[]  = "\xe7\x94\xb5\xe6\xb1\xa0\xe7\xb1\xbb\xe5\x9e\x8b";
 
 const char *UI_MENU_GetMenuTitle(const t_menu_item *item)

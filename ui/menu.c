@@ -52,7 +52,7 @@ const t_menu_item MenuList[] =
 {
 //   text,     voice ID,                               menu ID
 	{"Step",   VOICE_ID_FREQUENCY_STEP,                MENU_STEP          },
-	{"TxPwr",  VOICE_ID_POWER,                         MENU_TXP           },
+	{"TxPower", VOICE_ID_POWER,                        MENU_TXP           },
 	{"RxDCS",  VOICE_ID_DCS,                           MENU_R_DCS         },
 	{"RxCTCSS", VOICE_ID_CTCSS,                        MENU_R_CTCS        },
 	{"TxDCS",  VOICE_ID_DCS,                           MENU_T_DCS         },
@@ -73,7 +73,7 @@ const t_menu_item MenuList[] =
 	{"ScanList", VOICE_ID_INVALID,                     MENU_S_LIST        }, // was "SList"
 	{"ScanLst1", VOICE_ID_INVALID,                     MENU_SLIST1        }, // was "SList1"
 	{"ScanLst2", VOICE_ID_INVALID,                     MENU_SLIST2        }, // was "SList2"
-	{"ScanResm", VOICE_ID_INVALID,                     MENU_SC_REV        }, // was "ScnRev"
+	{"ScanRsum", VOICE_ID_INVALID,                     MENU_SC_REV        }, // was "ScnRev"
 #ifdef ENABLE_NOAA
 	{"NOAA-S", VOICE_ID_INVALID,                       MENU_NOAA_S        },
 #endif
@@ -81,7 +81,7 @@ const t_menu_item MenuList[] =
 	{"F1 Long",   VOICE_ID_INVALID,                   MENU_F1LONG        }, // was "F1Long"
 	{"F2 Short",  VOICE_ID_INVALID,                   MENU_F2SHRT        }, // was "F2Shrt"
 	{"F2 Long",   VOICE_ID_INVALID,                   MENU_F2LONG        }, // was "F2Long"
-	{"M Long",    VOICE_ID_INVALID,                   MENU_MLONG         },
+	{"MenuLong",  VOICE_ID_INVALID,                   MENU_MLONG         },
 
 	{"KeyLock", VOICE_ID_INVALID,                     MENU_AUTOLK        }, // was "KeyLck"
 	{"TxTimer", VOICE_ID_TRANSMIT_OVER_TIME,          MENU_TOT           }, // was "TxTOut"
@@ -93,7 +93,7 @@ const t_menu_item MenuList[] =
 	{"ChanDisp", VOICE_ID_INVALID,                    MENU_MDF           }, // was "ChDisp"
 	{"PwrOnMsg", VOICE_ID_INVALID,                    MENU_PONMSG        }, // was "POnMsg"
 	{"BatText", VOICE_ID_INVALID,                     MENU_BAT_TXT       }, // was "BatTxt"
-	{"Backlght", VOICE_ID_INVALID,                    MENU_ABR           }, // was "BackLt"
+	{"Backlit",  VOICE_ID_INVALID,                    MENU_ABR           }, // was "BackLt"
 	{"BL Min",  VOICE_ID_INVALID,                     MENU_ABR_MIN       }, // was "BLMin"
 	{"BL Max",  VOICE_ID_INVALID,                     MENU_ABR_MAX       }, // was "BLMax"
 	{"BL TX/RX", VOICE_ID_INVALID,                   MENU_ABR_ON_TX_RX  }, // was "BltTRX"
@@ -112,19 +112,19 @@ const t_menu_item MenuList[] =
 	{"ANI ID", VOICE_ID_ANI_CODE,                     MENU_ANI_ID        },
 #endif
 	{"DTMF Up", VOICE_ID_INVALID,                     MENU_UPCODE        }, // was "UPCode"
-	{"DTMF Dn", VOICE_ID_INVALID,                     MENU_DWCODE        }, // was "DWCode"
+	{"DTMF Dwn", VOICE_ID_INVALID,                    MENU_DWCODE        }, // was "DWCode"
 	{"PTT ID", VOICE_ID_INVALID,                      MENU_PTT_ID        },
 	{"DTMF ST", VOICE_ID_INVALID,                     MENU_D_ST          }, // was "D ST"
 #ifdef ENABLE_DTMF_CALLING
-	{"DTMF Rsp", VOICE_ID_INVALID,                    MENU_D_RSP         }, // was "D Resp"
-	{"DTMF Hld", VOICE_ID_INVALID,                    MENU_D_HOLD        }, // was "D Hold"
+	{"DTMFResp", VOICE_ID_INVALID,                    MENU_D_RSP         }, // was "D Resp"
+	{"DTMFHold", VOICE_ID_INVALID,                    MENU_D_HOLD        }, // was "D Hold"
 #endif
 	{"DTMF Pre", VOICE_ID_INVALID,                    MENU_D_PRE         }, // was "D Prel"
 #ifdef ENABLE_DTMF_CALLING
 	{"DTMF Dec", VOICE_ID_INVALID,                    MENU_D_DCD         }, // was "D Decd"
-	{"DTMF Lst", VOICE_ID_INVALID,                    MENU_D_LIST        }, // was "D List"
+	{"DTMFList", VOICE_ID_INVALID,                    MENU_D_LIST        }, // was "D List"
 #endif
-	{"DTMF Liv", VOICE_ID_INVALID,                    MENU_D_LIVE_DEC    }, // was "D Live"
+	{"DTMFLive", VOICE_ID_INVALID,                    MENU_D_LIVE_DEC    }, // was "D Live"
 #ifdef ENABLE_AM_FIX
 	{"AM Fix", VOICE_ID_INVALID,                       MENU_AM_FIX        },
 #endif
@@ -144,8 +144,8 @@ const t_menu_item MenuList[] =
 	{"Tx 200", VOICE_ID_INVALID,                       MENU_200TX         },
 	{"Tx 350", VOICE_ID_INVALID,                       MENU_350TX         },
 	{"Tx 500", VOICE_ID_INVALID,                       MENU_500TX         },
-	{"350 En", VOICE_ID_INVALID,                       MENU_350EN         },
-	{"ScramEn", VOICE_ID_INVALID,                      MENU_SCREN         }, // was "ScraEn"
+	{"350 Enbl", VOICE_ID_INVALID,                    MENU_350EN         },
+	{"Scram En", VOICE_ID_INVALID,                    MENU_SCREN         }, // was "ScraEn"
 #ifdef ENABLE_F_CAL_MENU
 	{"FreqCal", VOICE_ID_INVALID,                      MENU_F_CALI        }, // was "FrCali"
 #endif
