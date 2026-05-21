@@ -99,7 +99,7 @@ static const char cn_D_LIST[] = "DTMF\xe8\x81\x94\xe7\xb3\xbb";
 #endif
 /* DTMF直解 */static const char cn_D_LIVE[] = "DTMF\xe7\x9b\xb4\xe8\xa7\xa3";
 /* 开机画面 */static const char cn_PONMSG[]  = "\xe5\xbc\x80\xe6\x9c\xba\xe7\x94\xbb\xe9\x9d\xa2";
-/* 确认音   */static const char cn_ROGER[]   = "\xe7\xa1\xae\xe8\xae\xa4\xe9\x9f\xb3";
+/* Roger音  */static const char cn_ROGER[]   = "Roger\xe9\x9f\xb3";
 /* 电池电压 */static const char cn_VOL[]      = "\xe7\x94\xb5\xe6\xb1\xa0\xe7\x94\xb5\xe5\x8e\x8b";
 /* 电池显示 */static const char cn_BAT_TXT[] = "\xe7\x94\xb5\xe6\xb1\xa0\xe6\x98\xbe\xe7\xa4\xba";
 /* 报警  */
