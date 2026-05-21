@@ -953,6 +953,17 @@ void UI_DisplayMenu(void)
 	) {	// Show list index at left edge of content area (page 2) — avoids title-bar counter overlap
 		sprintf(String, "%2d", gSubMenuSelection);
 		UI_PrintStringSmallNormal(String, 0, 0, 2);
+		// Shift index down 2px to add a small gap from the separator line (same trick as counter)
+		{
+			const uint8_t idx_w = (uint8_t)(strlen(String) * 6u);
+			for (uint8_t col = 0; col < idx_w; col++) {
+				const uint8_t b = gFrameBuffer[2][col];
+				if (b) {
+					gFrameBuffer[2][col] = (uint8_t)(b << 2);
+					gFrameBuffer[3][col] |= (uint8_t)(b >> 6);
+				}
+			}
+		}
 	}
 
 	if ((UI_MENU_GetCurrentMenuId() == MENU_RESET    ||
