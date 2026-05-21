@@ -9,6 +9,34 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### UI — CTCSS/DCS selection index display fix & label updates (2026-05-21, `dev`)
+
+Flash budget: `text 60 808 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`ui/menu.c` — CTCSS/DCS/D_LIST index no longer overlaps title bar counter** —
+  The list-position index (e.g. "11" when selecting CTCSS tone 11) was rendered
+  at `(x=114, page=0)` without the 4 px vertical offset applied to the N/Total
+  counter, causing both strings to visually collide and bleed out of bounds.
+  Fixed by moving the index to the left edge of the value area (page 2, x=0),
+  matching the layout: `[index]  [value centred]  [> edit arrow]`.
+  A 2 px downward shift (same byte-shift technique as the counter) adds a small
+  gap from the separator line.  Character-width calculation corrected from
+  `strlen × 6` to `strlen × 7` (`char_spacing = char_width + 1`).
+
+- **`ui/menu_lang.c` — MicBar label: `音量条` → `话音电平`** —
+  `音量条` ("volume bar") implied speaker-output volume; the feature actually
+  shows the microphone audio level during TX.  `话音电平` ("voice audio level")
+  is the standard telecom term and fits within `CN_MAX` (13 bytes).
+
+- **`tools/cjk_font.bin` — regenerated to include `平` (U+5E73)** —
+  The new glyph `平` (from `话音电平`) was absent from the previous binary;
+  font regenerated, total remains 156 glyphs.
+
+- **`ui/menu.c` — `DelChan` moved to end of visible menu list** —
+  Repositioned from between `SaveChan`/`ChanName` to after `Language`,
+  immediately before the hidden-menu boundary.  Reduces the chance of
+  accidental channel deletion while browsing the channel-management section.
+
 ---
 
 ## [0.4.0] — 2026-05-21
