@@ -29,7 +29,7 @@ Custom firmware for the **Quansheng UV-K6 V1** (DP32G030 / ARM Cortex-M0), forke
 
 ## Project Status
 
-Current release: **v0.1.0** (2026-05-18).  
+Current release: **v0.4.0** (2026-05-21).  
 See [CHANGELOG.md](./CHANGELOG.md) for the full change history.
 
 ## Features
@@ -84,7 +84,35 @@ Output goes to `compiled-firmware\`.
 
 ### Flashing
 
+#### Step 1 — Flash the firmware
+
 Use the [UV-K5 Web Flasher](https://egzumer.github.io/uvtools) with `firmware.packed.bin`.
+
+#### Step 2 — Flash the CJK font *(Chinese builds only)*
+
+The default build (`ENABLE_CHINESE=1`) renders menu text using a bitmap font
+stored in the radio's external EEPROM.  **Without this step all CJK characters
+appear as blank boxes.**  Flash it once after installing the firmware, and
+again whenever you rebuild with a new font (i.e. after adding custom labels).
+
+Requires **pyserial** (`pip install pyserial`). Turn on the radio and connect
+it via USB before running:
+
+```bash
+# macOS / Linux
+python3 tools/flash_font.py --port /dev/ttyUSB0 --font tools/cjk_font.bin
+
+# macOS (CP210x USB–serial adapter)
+python3 tools/flash_font.py --port /dev/tty.usbserial-XXXX --font tools/cjk_font.bin
+```
+
+```bat
+:: Windows
+python tools\flash_font.py --port COM3 --font tools\cjk_font.bin
+```
+
+The tool prints each page written and verifies the data. The font lives at
+EEPROM offset `0x2000` and is independent of channel memory and settings.
 
 ## Build Options
 
@@ -95,10 +123,10 @@ or select a build profile with `make PROFILE=release` (default) / `make PROFILE=
 | ----------------------------- | --------- | ---------------------------------------- |
 | `ENABLE_UART`                 | 1         | PC configuration via UART — keep enabled |
 | `ENABLE_FMRADIO`              | 1         | WBFM broadcast receiver                  |
-| `ENABLE_CHINESE`              | **1**     | CJK font UI — auto-forces VOX & FLASHLIGHT off |
+| `ENABLE_CHINESE`              | **1**     | CJK font UI — auto-disables VOX to stay within flash budget |
 | `ENABLE_VOX`                  | 0 (auto)† | Voice-operated TX                        |
 | `ENABLE_DTMF_CALLING`         | **0**     | DTMF call system (disabled to fit flash) |
-| `ENABLE_FLASHLIGHT`           | 0 (auto)† | Top LED (on / blink / SOS)               |
+| `ENABLE_FLASHLIGHT`           | 1         | Top LED (on / blink / SOS)               |
 | `ENABLE_SPECTRUM`             | 1         | Spectrum analyzer (`F`+`5`)              |
 | `ENABLE_AM_FIX`               | 1         | Dynamic AM front-end gain                |
 | `ENABLE_RSSI_BAR`             | 1         | dBm/S-meter bar                          |
@@ -110,8 +138,8 @@ or select a build profile with `make PROFILE=release` (default) / `make PROFILE=
 | `ENABLE_LTO`                  | 1         | Link-time optimization (reduces size)    |
 
 † When `ENABLE_CHINESE=1` (the default), the Makefile automatically overrides
-`ENABLE_VOX` and `ENABLE_FLASHLIGHT` to `0` to stay within the 60 KB flash
-budget.  To enable them, set `ENABLE_CHINESE=0`.
+`ENABLE_VOX` to `0` to stay within the 60 KB flash budget.  To re-enable VOX,
+set `ENABLE_CHINESE=0` or disable other features to free space.
 
 Full list: see comments in [Makefile](./Makefile).
 
