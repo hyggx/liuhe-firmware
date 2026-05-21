@@ -1841,7 +1841,7 @@ void MENU_TimeSlice10ms(void)
 		t9_reset();   // lock char in place
 		if (edit_index < 9) {
 			edit_index++;              // auto-advance to next position
-			gRequestDisplayScreen = DISPLAY_MENU;
+			gUpdateDisplay = true;
 		}
 	}
 }
