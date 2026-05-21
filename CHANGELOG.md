@@ -9,6 +9,14 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+- **`app/scanner.c` — 扫频保存信道时默认发射功率改为 HIGH** —
+  `RADIO_InitInfo()` 初始化后固定写入 `OUTPUT_POWER_HIGH`，覆盖原来的 LOW 默认值。
+  仅影响频率扫描保存新信道的路径（`!gScanSingleFrequency`）；CTCSS/DCS 扫描路径从 EEPROM 读取，不受影响。
+
+- **`driver/bk4819.c` — 压扩接收侧噪声门限收紧：56 → 62 dB** —
+  TX 压缩噪声门限 64 dB 与 RX 展宽噪声门限原为 56 dB，差距 8 dB，导致静音间隙本底噪声被额外放大。
+  将 `expand_noise_dB` 从 56 改为 62，TX/RX 差距缩至 2 dB，减少底噪放大，同时保留 2 dB 裕量避免截止过早。
+
 ---
 
 ## [0.5.0] — 2026-05-21
