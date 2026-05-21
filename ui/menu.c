@@ -655,19 +655,22 @@ void UI_DisplayMenu(void)
 				}
 				else
 				{
-					UI_PrintString(edit, menu_item_x1, 0, 4, 8);
-					// Underline cursor: 1px at bottom of page 5
+					UI_PrintString(edit, menu_item_x1, menu_item_x2, 4, 8);
+					// Underline cursor: 1px at bottom of page 5 (adjusted for centred text)
 					if (edit_index < 10)
 					{
-						const uint8_t cx = (uint8_t)(edit_index * 8);
+						const uint8_t cx = (uint8_t)((LCD_WIDTH - 10 * 8) / 2 + edit_index * 8);
 						for (uint8_t dx = 0; dx < 7 && (cx + dx) < LCD_WIDTH; dx++)
 							gFrameBuffer[5][cx + dx] |= 0x80;
 					}
 				}
 
-				// Line 3: frequency small font (page 6 only)
-				sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
-				UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
+				// Line 3: frequency small font (page 6) — hidden during name editing
+				if (!gIsInSubMenu || edit_index < 0)
+				{
+					sprintf(String, "%u.%05u MHz", frequency / 100000, frequency % 100000);
+					UI_PrintStringSmallNormal(String, menu_item_x1, menu_item_x2, 6);
+				}
 			}
 			// When gAskForConfirmation: only CH# shown; SURE?/WAIT! drawn below
 

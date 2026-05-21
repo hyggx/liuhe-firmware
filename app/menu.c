@@ -1569,9 +1569,11 @@ static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 					break;
 
 				case 1:
-					gAskForConfirmation = 2;
-
-					UI_DisplayMenu();
+					// MEM_NAME: skip WAIT! — save directly after SURE?
+					if (UI_MENU_GetCurrentMenuId() != MENU_MEM_NAME) {
+						gAskForConfirmation = 2;
+						UI_DisplayMenu();
+					}
 
 					if (UI_MENU_GetCurrentMenuId() == MENU_RESET)
 					{
