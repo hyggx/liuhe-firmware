@@ -9,6 +9,77 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+### UI — CN menu label corrections (2026-05-21, `dev`)
+
+Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`ui/menu_lang.c` — CN menu labels aligned with Quansheng official manual** —
+  Based on a comparison with the official UV-K5/K6 Chinese manual;
+  corrections and completions applied to 13 items.
+
+  | Item | Before | After | Note |
+  |------|--------|-------|------|
+  | UPCODE | DTMF上行码 | DTMF上线码 | 上线 = on-air |
+  | DWCODE | DTMF下行码 | DTMF下线码 | 下线 = off-air |
+  | BCL | 繁忙锁定 | 遇忙禁发 | official exact term |
+  | MEM_CH | 保存信道 | 存储信道 | official: 存储 |
+  | TDR | 接收模式 | 双守候 | 双守候 = dual-watch standby |
+  | 1_CALL | 按键即呼 | 一键即呼 | official wording |
+  | VOICE | 语音 | 语音提示 | fuller form |
+  | TOT | 发射限时 | 发射超时 | official: 超时 |
+  | PONMSG | 开机画面 | 开机信息 | official: 信息 |
+  | STEP | 步进 | 步进频率 | completion |
+  | TXP | 功率 | 发射功率 | completion |
+  | SCR | 加密 | 加密通话 | completion |
+  | ABR | 背光时间 | 自动背光 | official abbrev. |
+
+  CJK font regenerated: 150 glyphs (net: +7 new chars 线遇储提一通话,
+  − 8 dropped unused glyphs).
+
+- **`ui/menu_lang.c` — S\_ADD1/2 and SLIST1/2 labels corrected** —
+
+  | Item | Before | After |
+  |------|--------|-------|
+  | S\_ADD1 | 扫描1 | 加入扫描1 |
+  | S\_ADD2 | 扫描2 | 加入扫描2 |
+  | SLIST1 | 列表1 | 扫描列表1 |
+  | SLIST2 | 列表2 | 扫描列表2 |
+
+  CJK font regenerated: 153 glyphs (+2 new chars 加入).
+
+### Feature — Channel name editor (`MEM_NAME`) overhaul; `MEM_CH` confirmation UX (2026-05-21, `dev`)
+
+Flash budget: `text 60 768 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
+
+- **`ui/menu.c`, `app/menu.c` — `MEM_NAME` (`编辑名称`) editor UX overhaul** —
+
+  - **CN label** changed: `命名信道` → `编辑名称` (edit name — more accurate).
+  - **Immediate edit entry**: first MENU press enters the edit buffer directly
+    (previously required two MENU presses; the first only showed the arrow).
+  - **Edit buffer centred**: the 10-character edit area is now horizontally
+    centred on the 128-px display (was left-aligned from pixel 0).
+  - **Cursor underline**: 1-px line drawn at the bottom of the active character
+    cell to indicate the current edit position.
+  - **Frequency bar hidden** during name editing; shown again in browse mode.
+  - **Skip WAIT step**: after SURE? confirmation, the name is saved on the
+    second MENU press without an intermediate WAIT! screen.
+
+- **`app/menu.c` — T9 cursor auto-advance and display fix** —
+
+  - **Different-key advance**: pressing a digit key different from the current
+    one immediately commits the displayed character and moves the cursor one
+    position right before starting the new T9 cycle.
+  - **Timer advance**: when the 1.5 s idle timer fires the cursor now moves to
+    the next position automatically (previously the character was locked but
+    the cursor stayed, requiring an extra MENU press to advance).
+  - **Display update fix**: the timer callback now sets `gUpdateDisplay = true`
+    directly instead of `gRequestDisplayScreen`, which is only processed inside
+    `ProcessKey()` and had no effect without a concurrent key press.
+
+- **`app/menu.c` — `MEM_CH` (存储信道): skip WAIT step** —
+  After SURE? confirmation, the second MENU press saves the channel directly
+  without an intermediate WAIT! screen, matching the MEM_NAME behaviour.
+
 ### Fixed — Flashlight re-enabled in CN build; frequency decimal precision (2026-05-20, `dev`)
 
 Flash budget: `text 60 608 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
@@ -51,7 +122,10 @@ Flash budget: `text 60 420 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
   **Operation:**
   - Press the same digit repeatedly to cycle through its characters.
-  - After 1.5 s idle the character is locked; press again to start a new one.
+  - After 1.5 s idle the character is locked and the cursor advances to the
+    next position automatically.
+  - Pressing a **different digit key** commits the current character and
+    immediately advances the cursor before starting the new T9 cycle.
   - **Short press MENU** — confirm current character and advance cursor.
   - **Long press MENU** — save immediately from any cursor position → shows SURE? confirmation.
   - **EXIT (pos > 0)** — backspace: erase current position and step back.
