@@ -1,9 +1,22 @@
 FROM ubuntu:24.04
 ARG http_proxy
 ARG https_proxy
+
+# Install dependencies (no apt gcc-arm-none-eabi — use official ARM tarball below)
 RUN apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      gcc-arm-none-eabi binutils-arm-none-eabi make git \
-      python3 python3-crcmod && \
+      wget xz-utils make git python3 python3-crcmod && \
     rm -rf /var/lib/apt/lists/*
+
+# ARM GNU Toolchain 15.2.Rel1 (GCC 15.2.1 + binutils 2.45.1)
+# Matches the macOS build environment; pin this version for reproducible builds.
+# Update the URL and ENV line together when upgrading.
+RUN wget -q \
+    "https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz" \
+    -O /tmp/tc.tar.xz && \
+    tar -xf /tmp/tc.tar.xz -C /opt && \
+    rm /tmp/tc.tar.xz
+
+ENV PATH="/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:$PATH"
+
 WORKDIR /build
