@@ -9,7 +9,9 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
-### UI — CTCSS/DCS selection index display fix & label updates (2026-05-21, `dev`)
+---
+
+## [0.5.0] — 2026-05-21
 
 Flash budget: `text 60 808 B / 61 440 B` (`ENABLE_CHINESE=1`, default config).
 
