@@ -150,6 +150,7 @@ const t_menu_item MenuList[] =
 	{"FreqCal", VOICE_ID_INVALID,                      MENU_F_CALI        }, // was "FrCali"
 #endif
 	{"BatCal", VOICE_ID_INVALID,                       MENU_BATCAL        },
+	{"AutoOff", VOICE_ID_INVALID,                      MENU_APO           },
 	{"BatType", VOICE_ID_INVALID,                      MENU_BATTYP        }, // was "BatTyp"
 	{"Reset",  VOICE_ID_INITIALISATION,                MENU_RESET         },
 
@@ -823,6 +824,13 @@ void UI_DisplayMenu(void)
 			sprintf(String, "%u.%02uV\n%u", vol / 100, vol % 100, gSubMenuSelection);
 			break;
 		}
+
+		case MENU_APO:
+			if (gSubMenuSelection == 0)
+				strcpy(String, SUBV("Off", "\xe5\x85\xb3"));
+			else
+				sprintf(String, SUBV("%umin", "%u\xe5\x88\x86"), (unsigned)gSubMenuSelection);
+			break;
 
 		case MENU_BATTYP:
 			strcpy(String, SUBV(gSubMenu_BATTYP[gSubMenuSelection], gSubMenu_BATTYP_CN[gSubMenuSelection]));

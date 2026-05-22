@@ -9,6 +9,12 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+- **`settings.h/c`, `ui/menu.h/c`, `app/menu.c`, `app/app.c` — 自动关机（APO）** —
+  新增菜单项 `AutoOff`（中文：自动关机），可设置 0–30 分钟无操作后自动深度睡眠。
+  0 = 关闭，1–30 = 分钟数。睡眠时关闭背光并进入 `FUNCTION_POWER_SAVE`（BK4819 休眠，无法接收）。
+  任意按键唤醒，自动恢复 `FUNCTION_FOREGROUND`。收发期间自动重置倒计时。
+  设置存储于 EEPROM `0x0EAD`（`0x0EA8` 块 `Data[5]`）。
+
 - **`app/main.c` — F+↑/↓ 动态调节静噪级** —
   在主界面按 F 再按上/下键即可将全局静噪等级（`gEeprom.SQUELCH_LEVEL`，0–9）加减 1。
   修改即时生效（`gVfoConfigureMode = VFO_CONFIGURE`），并自动保存到 EEPROM。

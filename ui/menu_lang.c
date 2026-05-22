@@ -126,6 +126,7 @@ static const char cn_F_CALI[]  = "\xe9\xa2\x91\xe7\x8e\x87\xe6\xa0\xa1\xe5\x87\x
 /* 键2长按 */static const char cn_F2LONG[]  = "\xe9\x94\xae\x32\xe9\x95\xbf\xe6\x8c\x89";
 /* 菜单长按 */static const char cn_MLONG[]   = "\xe8\x8f\x9c\xe5\x8d\x95\xe9\x95\xbf\xe6\x8c\x89";
 /* 电池类型 */static const char cn_BATTYP[]  = "\xe7\x94\xb5\xe6\xb1\xa0\xe7\xb1\xbb\xe5\x9e\x8b";
+/* 自动关机 */static const char cn_APO[]     = "\xe8\x87\xaa\xe5\x8a\xa8\xe5\x85\xb3\xe6\x9c\xba";
 
 const char *UI_MENU_GetMenuTitle(const t_menu_item *item)
 {
@@ -225,6 +226,7 @@ const char *UI_MENU_GetMenuTitle(const t_menu_item *item)
 		case MENU_F2LONG:    return cn_F2LONG;
 		case MENU_MLONG:     return cn_MLONG;
 		case MENU_BATTYP:    return cn_BATTYP;
+		case MENU_APO:       return cn_APO;
 		default:             return item->name;
 	}
 }
