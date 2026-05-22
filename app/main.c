@@ -602,21 +602,6 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 {
 	uint8_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
 
-	// F + UP/DOWN: adjust global squelch level
-	if (gWasFKeyPressed) {
-		if (!bKeyHeld && bKeyPressed) {
-			const int8_t newSQL = (int8_t)gEeprom.SQUELCH_LEVEL + Direction;
-			gEeprom.SQUELCH_LEVEL = (newSQL < 0) ? 0 : (newSQL > 9) ? 9 : (uint8_t)newSQL;
-			gWasFKeyPressed   = false;
-			gUpdateStatus     = true;
-			gRequestSaveSettings = true;
-			gVfoConfigureMode = VFO_CONFIGURE;
-			gUpdateDisplay    = true;
-			gBeepToPlay       = BEEP_1KHZ_60MS_OPTIONAL;
-		}
-		return;
-	}
-
 	if (bKeyHeld || !bKeyPressed) { // key held or released
 		if (gInputBoxIndex > 0)
 			return; // leave if input box active

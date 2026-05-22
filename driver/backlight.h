@@ -23,10 +23,6 @@
 extern uint16_t gBacklightCountdown_500ms;
 extern uint8_t gBacklightBrightness;
 
-// Countdown in 10ms ticks for the next brightness-step during fade-to-off.
-// 0 = not fading.  Set to BACKLIGHT_FADE_STEP_10MS to begin a fade step.
-#define BACKLIGHT_FADE_STEP_10MS  5   // 50 ms between steps → ~500 ms total fade
-extern uint8_t gBacklightFadeCountdown10ms;
 
 #ifdef ENABLE_BLMIN_TMP_OFF
 typedef enum {
@@ -39,7 +35,7 @@ typedef enum {
 void BACKLIGHT_InitHardware();
 void BACKLIGHT_TurnOn();
 void BACKLIGHT_TurnOff();
-void BACKLIGHT_StartFade(void);
+
 bool BACKLIGHT_IsOn();
 void BACKLIGHT_SetBrightness(uint8_t brigtness);
 uint8_t BACKLIGHT_GetBrightness(void);
