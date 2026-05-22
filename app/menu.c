@@ -404,11 +404,6 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 			*pMax = 1;
 			break;
 
-		case MENU_APO:
-			*pMin = 0;
-			*pMax = 30;
-			break;
-
 		case MENU_F1SHRT:
 		case MENU_F1LONG:
 		case MENU_F2SHRT:
@@ -843,11 +838,6 @@ void MENU_AcceptSetting(void)
 			gEeprom.BATTERY_TYPE = gSubMenuSelection;
 			break;
 
-		case MENU_APO:
-			gEeprom.APO_TIMER = gSubMenuSelection;
-			gRequestSaveSettings = true;
-			break;
-
 		case MENU_F1SHRT:
 		case MENU_F1LONG:
 		case MENU_F2SHRT:
@@ -1205,10 +1195,6 @@ void MENU_ShowCurrentSetting(void)
 
 		case MENU_BATTYP:
 			gSubMenuSelection = gEeprom.BATTERY_TYPE;
-			break;
-
-		case MENU_APO:
-			gSubMenuSelection = gEeprom.APO_TIMER;
 			break;
 
 		case MENU_F1SHRT:

@@ -136,7 +136,6 @@ const t_menu_item MenuList[] =
 #ifdef ENABLE_CHINESE
 	{"Language", VOICE_ID_INVALID,                     MENU_LANGUAGE      }, // was "Lang"
 #endif
-	{"AutoOff", VOICE_ID_INVALID,                      MENU_APO           },
 	{"DelChan", VOICE_ID_DELETE_CHANNEL,               MENU_DEL_CH        }, // was "ChDele"
 
 	// hidden menu items from here on
@@ -824,13 +823,6 @@ void UI_DisplayMenu(void)
 			sprintf(String, "%u.%02uV\n%u", vol / 100, vol % 100, gSubMenuSelection);
 			break;
 		}
-
-		case MENU_APO:
-			if (gSubMenuSelection == 0)
-				strcpy(String, SUBV("Off", "\xe5\x85\xb3"));
-			else
-				sprintf(String, SUBV("%umin", "%u\xe5\x88\x86"), (unsigned)gSubMenuSelection);
-			break;
 
 		case MENU_BATTYP:
 			strcpy(String, SUBV(gSubMenu_BATTYP[gSubMenuSelection], gSubMenu_BATTYP_CN[gSubMenuSelection]));

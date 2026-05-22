@@ -9,12 +9,6 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
-- **`settings.h/c`, `ui/menu.h/c`, `app/menu.c`, `app/app.c` — 自动关机（APO）** —
-  新增菜单项 `AutoOff`（中文：自动关机），可设置 0–30 分钟无操作后自动深度睡眠。
-  0 = 关闭，1–30 = 分钟数。睡眠时关闭背光并进入 `FUNCTION_POWER_SAVE`（BK4819 休眠，无法接收）。
-  任意按键唤醒，自动恢复 `FUNCTION_FOREGROUND`。收发期间自动重置倒计时。
-  设置存储于 EEPROM `0x0EAD`（`0x0EA8` 块 `Data[5]`）。
-
 - **`app/scanner.c` — 扫频保存信道时默认发射功率改为 HIGH** —
   `RADIO_InitInfo()` 初始化后固定写入 `OUTPUT_POWER_HIGH`，覆盖原来的 LOW 默认值。
   仅影响频率扫描保存新信道的路径（`!gScanSingleFrequency`）；CTCSS/DCS 扫描路径从 EEPROM 读取，不受影响。

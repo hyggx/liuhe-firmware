@@ -75,7 +75,6 @@
 static bool flagSaveVfo;
 static bool flagSaveSettings;
 static bool flagSaveChannel;
-static uint32_t gApoCountdown_500ms = 0; // APO inactivity countdown (0 = inactive)
 
 static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 
@@ -1332,17 +1331,6 @@ void APP_TimeSlice500ms(void)
 		BACKLIGHT_TurnOff();
 	}
 
-	// APO (auto deep sleep): count down while idle, reset on TX/RX
-	if (gEeprom.APO_TIMER > 0) {
-		if (gCurrentFunction == FUNCTION_TRANSMIT || FUNCTION_IsRx()) {
-			gApoCountdown_500ms = (uint32_t)gEeprom.APO_TIMER * 120;
-		} else if (gApoCountdown_500ms > 0 && --gApoCountdown_500ms == 0) {
-			BACKLIGHT_TurnOff();
-			if (gCurrentFunction != FUNCTION_POWER_SAVE)
-				FUNCTION_Select(FUNCTION_POWER_SAVE);
-		}
-	}
-
 	if (gReducedService)
 	{
 		BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
@@ -1537,10 +1525,6 @@ static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 		FUNCTION_Select(FUNCTION_FOREGROUND);
 
 	gBatterySaveCountdown_10ms = battery_save_count_10ms;
-
-	// Reset APO inactivity timer on any key press
-	if (gEeprom.APO_TIMER > 0 && bKeyPressed && !bKeyHeld)
-		gApoCountdown_500ms = (uint32_t)gEeprom.APO_TIMER * 120;
 
 	if (gEeprom.AUTO_KEYPAD_LOCK)
 		gKeyLockCountdown = 30;     // 15 seconds

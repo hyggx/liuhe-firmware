@@ -248,7 +248,6 @@ typedef struct {
 #endif
 	uint8_t               BACKLIGHT_MAX;
 	BATTERY_Type_t		  BATTERY_TYPE;
-	uint8_t               APO_TIMER;        // 0 = off, 1-30 = minutes until deep sleep
 #ifdef ENABLE_RSSI_BAR
 	uint8_t               S0_LEVEL;
 	uint8_t               S9_LEVEL;
