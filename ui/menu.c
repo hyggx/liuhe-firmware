@@ -136,6 +136,7 @@ const t_menu_item MenuList[] =
 #ifdef ENABLE_CHINESE
 	{"Language", VOICE_ID_INVALID,                     MENU_LANGUAGE      }, // was "Lang"
 #endif
+	{"AutoOff", VOICE_ID_INVALID,                      MENU_APO           },
 	{"DelChan", VOICE_ID_DELETE_CHANNEL,               MENU_DEL_CH        }, // was "ChDele"
 
 	// hidden menu items from here on
@@ -150,7 +151,6 @@ const t_menu_item MenuList[] =
 	{"FreqCal", VOICE_ID_INVALID,                      MENU_F_CALI        }, // was "FrCali"
 #endif
 	{"BatCal", VOICE_ID_INVALID,                       MENU_BATCAL        },
-	{"AutoOff", VOICE_ID_INVALID,                      MENU_APO           },
 	{"BatType", VOICE_ID_INVALID,                      MENU_BATTYP        }, // was "BatTyp"
 	{"Reset",  VOICE_ID_INITIALISATION,                MENU_RESET         },
 
