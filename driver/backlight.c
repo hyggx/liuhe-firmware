@@ -24,6 +24,7 @@
 // this is decremented once every 500ms
 uint16_t gBacklightCountdown_500ms = 0;
 bool backlightOn;
+uint8_t gBacklightFadeCountdown10ms = 0;
 
 void BACKLIGHT_InitHardware()
 {
@@ -101,6 +102,19 @@ void BACKLIGHT_TurnOff()
 bool BACKLIGHT_IsOn()
 {
 	return backlightOn;
+}
+
+// Begin a smooth fade to off.  Called by the 500ms timeslice instead of
+// BACKLIGHT_TurnOff() so brightness steps down over ~500 ms.
+void BACKLIGHT_StartFade(void)
+{
+	// Only fade if we are actually lit above min.
+	if (BACKLIGHT_GetBrightness() > gEeprom.BACKLIGHT_MIN) {
+		gBacklightFadeCountdown10ms = BACKLIGHT_FADE_STEP_10MS;
+	}
+	else {
+		BACKLIGHT_TurnOff();
+	}
 }
 
 static uint8_t currentBrightness;

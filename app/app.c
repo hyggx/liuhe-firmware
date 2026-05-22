@@ -1113,6 +1113,24 @@ void APP_TimeSlice10ms(void)
 	if (gReducedService)
 		return;
 
+	// Backlight fade: step brightness down every BACKLIGHT_FADE_STEP_10MS ticks
+	if (gBacklightFadeCountdown10ms > 0) {
+		if (--gBacklightFadeCountdown10ms == 0) {
+			const uint8_t minBrightness = gEeprom.BACKLIGHT_MIN;
+			const uint8_t cur          = BACKLIGHT_GetBrightness();
+			if (cur > minBrightness) {
+				BACKLIGHT_SetBrightness(cur - 1);
+				if (BACKLIGHT_GetBrightness() > minBrightness)
+					gBacklightFadeCountdown10ms = BACKLIGHT_FADE_STEP_10MS; // next step
+				else
+					BACKLIGHT_TurnOff(); // reached minimum, finish
+			}
+			else {
+				BACKLIGHT_TurnOff();
+			}
+		}
+	}
+
 	if (gCurrentFunction != FUNCTION_POWER_SAVE || !gRxIdleMode)
 		CheckRadioInterrupts();
 
@@ -1328,7 +1346,7 @@ void APP_TimeSlice500ms(void)
 		&& --gBacklightCountdown_500ms == 0
 		&& gEeprom.BACKLIGHT_TIME < (ARRAY_SIZE(gSubMenu_BACKLIGHT) - 1)
 	) {
-		BACKLIGHT_TurnOff();
+		BACKLIGHT_StartFade();
 	}
 
 	if (gReducedService)

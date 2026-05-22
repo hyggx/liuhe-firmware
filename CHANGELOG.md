@@ -9,6 +9,14 @@ Version scheme: `MAJOR.MINOR.PATCH[-label]` — `0.x` series is pre-release.
 
 ## [Unreleased]
 
+- **`app/main.c` — F+↑/↓ 动态调节静噪级** —
+  在主界面按 F 再按上/下键即可将全局静噪等级（`gEeprom.SQUELCH_LEVEL`，0–9）加减 1。
+  修改即时生效（`gVfoConfigureMode = VFO_CONFIGURE`），并自动保存到 EEPROM。
+
+- **`driver/backlight.c`, `app/app.c` — 背光渐灭效果** —
+  背光超时后不再瞬间关灯，而是每 50 ms 将 PWM 亮度降一档（指数曲线），约 500 ms 平滑淡出至最低亮度后关闭。
+  新增 `BACKLIGHT_StartFade()` 函数及 `gBacklightFadeCountdown10ms` 计数器，不影响按键触发的即时开/关逻辑。
+
 - **`app/scanner.c` — 扫频保存信道时默认发射功率改为 HIGH** —
   `RADIO_InitInfo()` 初始化后固定写入 `OUTPUT_POWER_HIGH`，覆盖原来的 LOW 默认值。
   仅影响频率扫描保存新信道的路径（`!gScanSingleFrequency`）；CTCSS/DCS 扫描路径从 EEPROM 读取，不受影响。
