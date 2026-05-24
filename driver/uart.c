@@ -91,7 +91,13 @@ void UART_Send(const void *pBuffer, uint32_t Size)
 
 	for (i = 0; i < Size; i++) {
 		UART1->TDR = pData[i];
+		/* Timeout: ~2 ms at 48 MHz, ~8× the worst-case FIFO drain time at
+		 * 39053 baud (≈256 µs/byte).  Prevents an infinite spin if the UART
+		 * TX hardware faults and the FIFO never drains. */
+		uint32_t timeout = 96000u;
 		while ((UART1->IF & UART_IF_TXFIFO_FULL_MASK) != UART_IF_TXFIFO_FULL_BITS_NOT_SET) {
+			if (--timeout == 0u)
+				break;
 		}
 	}
 }
