@@ -31,7 +31,7 @@ Custom firmware for the **Quansheng UV-K6 V1** (DP32G030 / ARM Cortex-M0), forke
 
 ## Project Status
 
-Current release: **v0.4.0** (2026-05-21).  
+Current release: **v0.6.0** (2026-05-24).  
 See [CHANGELOG.md](./CHANGELOG.md) for the full change history.
 
 ## Features
