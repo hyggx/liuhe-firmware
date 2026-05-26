@@ -32,7 +32,7 @@
 
 ## 这是什么
 
-**海歌**（英文：hygg）是针对泉盛 UV-K6 V1 的第三方开源固件，基于
+**海歌**（英文：haige）是针对泉盛 UV-K6 V1 的第三方开源固件，基于
 [egzumer 的 UV-K5 自定义固件](https://github.com/egzumer/uv-k5-firmware-custom)
 进行深度定制开发，专注于中文用户体验和实用功能增强。
 

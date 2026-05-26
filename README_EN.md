@@ -1,4 +1,4 @@
-# Hygg (海歌) — UV-K6 V1 Custom Firmware
+# Haige (海歌) — UV-K6 V1 Custom Firmware
 
 Custom firmware for the **Quansheng UV-K6 V1** (DP32G030 / ARM Cortex-M0), forked from
 [egzumer/uv-k5-firmware-custom](https://github.com/egzumer/uv-k5-firmware-custom).

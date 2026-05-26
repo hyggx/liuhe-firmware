@@ -453,7 +453,7 @@ void RADIO_ConfigureSquelchAndOutputPower(VFO_Info_t *pInfo)
 		 * This inverts the hysteresis, causing squelch chatter on weak signals.
 		 * The symptom was masked in practice by the time-domain delays in REG_4E.
 		 *
-		 * FIX (Hygg): Scale BOTH open and close thresholds by the same factor so
+		 * FIX (Haige): Scale BOTH open and close thresholds by the same factor so
 		 * the hysteresis window shrinks proportionally but the direction is preserved.
 		 */
 
@@ -905,7 +905,7 @@ void RADIO_SetModulation(ModulationMode_t modulation)
 void RADIO_SetupAGC(bool listeningAM, bool disable)
 {
 	static uint8_t lastSettings;
-	// BUG FIX (Hygg): both fields were shifted left by 1, causing 'disable' to
+	// BUG FIX (Haige): both fields were shifted left by 1, causing 'disable' to
 	// occupy the same bit as 'listeningAM'.  When listeningAM=1 and only 'disable'
 	// changed (e.g. Spectrum lockAGC toggle), the change was not detected and
 	// the function returned early without updating the AGC configuration.

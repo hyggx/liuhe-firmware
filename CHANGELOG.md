@@ -458,7 +458,7 @@ Flash budget (2026-05-18, `ENABLE_CHINESE=1`, default config):
   stock antenna; signal more likely to dwell in the squelch boundary zone).
   At ~−100 dBm (S4–S6) on a UHF simplex frequency, stock V1 firmware
   exhibited audible background noise bursts consistent with squelch chatter
-  in the RSSI 25–40 hysteresis-inversion window.  Hygg firmware (this fix)
+  in the RSSI 25–40 hysteresis-inversion window.  Haige firmware (this fix)
   produced clean, stable audio under identical conditions.  Hardware and
   antenna unchanged between tests; improvement confirmed as firmware-only.
 
