@@ -222,7 +222,7 @@ int16_t prev_rssi[2] = {0, 0};
 // to help reduce gain hunting, peak hold count down tick
 unsigned int hold_counter[2] = {0, 0};
 // Target RF level at the BK4819 AM demodulator input.
-// BUG FIX (Haige): upstream used -89 dBm, but 100% AM modulation produces
+// BUG FIX (Liuhe): upstream used -89 dBm, but 100% AM modulation produces
 // sideband peaks at carrier + 6 dB.  Keeping the *carrier* at -89 dBm means
 // peaks reach -83 dBm, overdriving the demodulator on heavily-modulated
 // broadcast stations (audible as occasional clipping on music/speech peaks).
@@ -235,7 +235,7 @@ bool enabled = true;
 void AM_fix_init(void)
 {	// called at boot-up
 	for (int i = 0; i < 2; i++) {
-		// BUG FIX (Haige): starting at index 0 (the isolated "original" entry at
+		// BUG FIX (Liuhe): starting at index 0 (the isolated "original" entry at
 		// -7 dB) then stepping to index 1 on a weak signal causes an 86 dB gain
 		// drop before the ramp-up begins (index 0 → index 1 = -93 dB).  Instead
 		// start at maximum gain so weak signals are immediately receivable; the
@@ -259,7 +259,7 @@ void AM_fix_reset(const unsigned vfo)
 	prev_rssi[vfo] = 0;
 	hold_counter[vfo] = 0;
 	gain_table_index_prev[vfo] = 0;
-	// FIX (Haige): AM_fix_init() starts at max gain but AM_fix_reset() did not;
+	// FIX (Liuhe): AM_fix_init() starts at max gain but AM_fix_reset() did not;
 	// after tuning away from a strong signal the index was left at a low-gain
 	// position, causing a slow (≈400 ms) ramp-up and near-silence on the new
 	// weak-signal channel.  Reset to max gain so the AGC can attenuate
